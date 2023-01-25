@@ -1,5 +1,5 @@
 
-Go to colab.research.google.com
+* Go to colab.research.google.com
 
 1. Change the runtime to using a GPU
   Top Menu:  Runtime
@@ -40,3 +40,16 @@ Go to colab.research.google.com
   - compile and run
     ! nvcc test.cu
     ! ./a.out
+
+* Using a github repo
+
+  ! git clone https://github.com/cibercitizen1/cuda_hello.git
+
+  use
+
+    %cd <dir>
+
+  to actually change to <dir> in a colab code cell. !cd <dir> is useless.
+
+
+
