@@ -1,0 +1,42 @@
+
+Go to colab.research.google.com
+
+1. Change the runtime to using a GPU
+  Top Menu:  Runtime
+                -> Change Runtime Type: HW accelerator: GPU -> SAVE !
+
+2. Check nvcc is available
+
+  (+code) 
+
+  ! nvcc --version
+
+3. Install this plugin:
+
+  (+code)
+
+  ! pip install git+https://github.com/andreinechaev/nvcc4jupyter.git
+  
+4. load the plugin
+
+  (+code)
+
+  %load_ext nvcc_plugin
+
+ 5. copy & paste a .cu program make sure the text starts with %%cu
+
+ (+code)
+
+ %%load_ext
+ ... file .cu contents ...
+ 
+6. Just push "play button" on the "cell"/snippet snippet
+
+7. Alternatively, you can
+  - save the file:
+    %%write_file test.cu
+    ... file contents ...
+
+  - compile and run
+    ! nvcc test.cu
+    ! ./a.out
