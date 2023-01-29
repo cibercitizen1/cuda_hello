@@ -51,5 +51,18 @@
 
   to actually change to <dir> in a colab code cell. !cd <dir> is useless.
 
+  Afterwards:
+
+    !git pull
+  
+  
+* Moving around in colab file tree
+
+  things seem to be in /content:
+
+    %cd /content
+    ! ls
+
+
 
 

@@ -1,0 +1,387 @@
+// -*- mode: c++ -*-
+// ===================================================================
+// mainGeneral.cu
+// ===================================================================
+
+#include <stdio.h>
+//#include <cuda.h>
+
+// #include <typeinfo>
+
+// ===================================================================
+// ===================================================================
+
+// The number of threads per block is influenced by how many
+// local memory a kernel uses. The more memory used, the lesser
+// number of threads a block can have.
+//
+// We define the block's number of threads in 2D for we will be
+// operate on 2D data.
+
+const unsigned int BLOCK_SIDE = 8;
+dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
+
+// ===================================================================
+// ===================================================================
+// As long as  we are using generated data (i.e. not read from a file),
+// we choose its size here.
+const unsigned int WIDTH_COLUMNS_X = 64; //512;
+const unsigned int HEIGHT_ROWS_Y = 64; //512;
+
+// type of the elements on the 2D input data
+typedef float Element_Type;
+
+// type of the results
+typedef float Result_Type;
+
+// ===================================================================
+// ===================================================================
+class Cuda_Error {};
+void check_cuda_call( const char * msg = "" ) {
+  
+  cudaError_t error = cudaGetLastError();
+  
+  if ( error != cudaSuccess ) {
+	fprintf( stderr, "%s: %s\n", msg, cudaGetErrorString( error ) );
+  }
+  throw Cuda_Error{};
+} // ()
+
+// ===================================================================
+// utility for malloc()
+// ===================================================================
+class Malloc_Error {};
+
+// ===================================================================
+template<typename T>
+T my_malloc( const long unsigned size )
+// spec. no longer needed: throw ( Malloc_Error )
+{
+  void * ptr = malloc( size );
+  if ( ptr == nullptr ) {
+	throw Malloc_Error {};
+  }
+  return static_cast<T>( ptr );
+} // ()
+
+// ===================================================================
+template<typename T, unsigned int NUM_ROWS, unsigned int NUM_COLUMNS>
+auto my_malloc_2D_OK( ) {
+  auto ptr = new T[NUM_ROWS][NUM_COLUMNS];
+  if ( ptr == nullptr ) {
+	throw Malloc_Error {};
+  }
+  return ptr;
+} // ()
+
+// ===================================================================
+// Let's use this versiono with cudaMallocHost()
+// with gets "pinned memory" in the CPU for us.
+// I guess that means that the memory is aligned so that transfers
+// from and to the GPU are faster.
+template<typename T, unsigned int NUM_ROWS, unsigned int NUM_COLUMNS>
+auto my_malloc_2D( ) {
+  
+  T* ptr = nullptr;
+  size_t size = NUM_ROWS * NUM_COLUMNS * sizeof( T );
+  // printf( "my_malloc_2D(): size=%zu\n", size );
+
+  //
+  //
+  //
+  cudaMallocHost( & ptr, size );
+  check_cuda_call( "my_malloc_2D(): cudaMallocHost()" );
+  
+  if ( ptr == nullptr ) {
+	throw Malloc_Error {};
+  }
+
+  //return static_cast< T (*)[NUM_COLUMNS] >( ptr );
+  return ( T (*)[NUM_COLUMNS] ) ptr;
+} // ()
+
+/*
+  //auto kk = new int [10][20];
+  // OK int (* kk)[20] = new int [10][20];
+  int (* kk)[20] = new int [10][20];
+  kk[9][2] = 13;
+*/
+
+// ===================================================================
+// Utility class for allocating memory both on the device
+// and on the host.
+// ===================================================================
+template<typename T, unsigned int NUM_ROWS, unsigned int NUM_COLUMNS>
+class Results_Holder {
+public:
+  T (*results_on_host)[NUM_COLUMNS];
+  T * results_on_device;
+
+  // -----------------------------------------------------------------
+  // destructor
+  // -----------------------------------------------------------------
+  ~Results_Holder( ) {
+	cudaFree( results_on_host );
+	cudaFree( results_on_device );
+	printf( " results memory (host and device) freed \n" );
+  } // ()
+
+  // -----------------------------------------------------------------
+  // constructor
+  // -----------------------------------------------------------------
+  Results_Holder( ) {
+	//
+	// Get memory on the host.
+	//
+	results_on_host = my_malloc_2D< T, NUM_ROWS, NUM_COLUMNS>();
+  
+	//
+	// Get memory on the device. Regular memory I guess, i.e. not a texture.
+	//
+	// Right now: I don't the differences between cudaMalloc and
+	// cudaMallocManaged.
+	//
+	cudaMallocManaged( & results_on_device,
+					   NUM_ROWS * NUM_COLUMNS * sizeof( T )
+					   );
+
+	check_cuda_call( " Results_Holder: cudaMallocManaged()" );
+  } // ()
+
+  // -----------------------------------------------------------------
+  // -----------------------------------------------------------------
+  void copy_results_device_to_host() {
+	cudaMemcpy( results_on_host,
+				results_on_device,
+				NUM_ROWS * NUM_COLUMNS * sizeof( T ),
+				cudaMemcpyDeviceToHost );
+	check_cuda_call( " copy_results_device_to_host " );
+  } // ()
+
+  // -----------------------------------------------------------------
+  // -----------------------------------------------------------------
+}; // class
+
+// ===================================================================
+// Utility class for allocating memory on the device ( a cudaArray )
+// binding it to a texture and copying the input data on the host
+// to it.
+// ===================================================================
+template<typename T, unsigned int NUM_ROWS, unsigned int NUM_COLUMNS>
+class Texture_Array_Holder {
+public:
+  
+  cudaChannelFormatDesc channel_desc;
+  cudaArray* cuda_array_data;
+  cudaTextureObject_t texture;
+  cudaResourceDesc resource_desc;
+  cudaTextureDesc texture_desc;
+
+  // -----------------------------------------------------------------
+  // destructor
+  // -----------------------------------------------------------------
+  ~Texture_Array_Holder( ) {
+	cudaFreeArray( cuda_array_data );
+	cudaDestroyTextureObject( texture );
+	printf( " cuda_array_data and texture memory freed \n" );
+  } // ()
+
+  // -----------------------------------------------------------------
+  // constructor
+  // -----------------------------------------------------------------
+  Texture_Array_Holder(
+					   Element_Type (*p_data)[NUM_COLUMNS]
+					   ) {
+
+	// What is this for?
+	channel_desc =
+	  cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat );
+	//
+	// create a 2D array on the GPU to place our data
+	//
+
+	cudaMallocArray( & cuda_array_data,
+					 & channel_desc,
+					 NUM_ROWS,// number of rows
+					 NUM_COLUMNS // number of columns
+					 );
+	//
+	// copy the data from here to the array on the device
+	//
+	cudaMemcpy2DToArray( cuda_array_data,
+						 0, 0,
+						 p_data,
+						 NUM_COLUMNS * sizeof( Element_Type ),
+						 NUM_COLUMNS * sizeof( Element_Type ),
+						 NUM_ROWS,
+						 cudaMemcpyHostToDevice );
+	//
+	// creacte and configure a texture
+	//
+  
+	memset( & resource_desc, 0, sizeof( cudaResourceDesc ) );
+	resource_desc.resType = cudaResourceTypeArray;
+	// It appears to be here where the data array is bound
+	// to something related to the texture
+	resource_desc.res.array.array = cuda_array_data;
+
+	memset( & texture_desc, 0, sizeof( cudaTextureDesc ) );
+
+	// Last time I set this. Why?
+	texture_desc.normalizedCoords = false;  
+	texture_desc.readMode = cudaReadModeElementType;
+
+	// Here it is where the texture is actually created
+	cudaCreateTextureObject( & texture,
+							 & resource_desc,
+							 & texture_desc,
+							 nullptr );
+
+	check_cuda_call( " cudaCreateTextureObject() " );
+  } // ()
+
+  // -----------------------------------------------------------------
+  // -----------------------------------------------------------------
+};
+
+// ===================================================================
+//
+// kernel
+//
+// ===================================================================
+__global__ void test_kernel_1( Result_Type * p_results,
+							   unsigned int width,
+							   unsigned int height,
+							   cudaTextureObject_t in_data_texture
+							   ) {
+
+  unsigned int x_column = (blockIdx.x * blockDim.x) + threadIdx.x;
+  unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
+
+  Element_Type input_val =
+	tex2D<Element_Type>( in_data_texture, x_column+0.5f, y_row+0.5f );
+
+  p_results[ (width * y_row) + x_column ] = -input_val;
+	
+} // ()
+
+// ===================================================================
+// ===================================================================
+template<typename T, unsigned int NUM_ROWS, unsigned int NUM_COLUMNS>
+auto make_up_some_data() {
+  
+  //
+  // Malloc on the host
+  //
+ T (*p_data)[NUM_COLUMNS] = my_malloc_2D< T, NUM_ROWS, NUM_COLUMNS>();
+
+  printf( " got the memory for input data \n" );
+
+  //
+  // Fill in the data
+  // Each element is a float: row.col. Ex. 10.15 is row 10, col 15
+  //
+  for ( unsigned int row = 0; row < NUM_ROWS; row++ ) {
+	//printf( " row %d \n", row );
+	for ( unsigned int col = 0; col < NUM_COLUMNS; col++ ) {
+	  p_data[ row ][ col ] = row + col/1000.0;
+	} // for
+  } // for
+
+  //printf( " %f \n", p_data2[ 10*WIDTH_COLUMNS_X + 15 ] );
+  printf( " %f \n", p_data[10][15] );
+
+  //
+  //
+  //
+  return p_data;
+} // ()
+
+// ===================================================================
+//
+// main
+//
+// ===================================================================
+int main( int n_args, char * args[] ) {
+
+  printf( " starting \n" );
+
+  // .................................................................
+  // Create the input data for the kernels
+  // to compute something on it
+  // .................................................................
+  auto p_data =
+	make_up_some_data<Element_Type, HEIGHT_ROWS_Y, WIDTH_COLUMNS_X>();
+ 
+  // .................................................................
+  // Copy the input data to the device, in a texture
+  // .................................................................
+  Texture_Array_Holder<Element_Type, HEIGHT_ROWS_Y, WIDTH_COLUMNS_X>
+	data_in_texture( p_data ); 
+
+  printf( " placed input data on a cuda_array bound to a texture \n" );
+					   
+  // .................................................................
+  // Get memory to hold the results (on the GPU and on the CPU)
+  // Let's suppose that we get a result for each input element.
+  // .................................................................
+  Results_Holder<Result_Type, HEIGHT_ROWS_Y, WIDTH_COLUMNS_X> results; 
+				   
+  // .................................................................
+  // set up the launch of kernels
+  // .................................................................
+  // Number of blocks we need considering a thread per element (pixel)
+  // in the 2D data
+  // Defined in 2D.
+  //
+  dim3 NUM_BLOCKS( WIDTH_COLUMNS_X / THREADS_PER_BLOCK.x,
+				   HEIGHT_ROWS_Y / THREADS_PER_BLOCK.y );
+
+  // .................................................................
+  // Launch the kernel
+  // .................................................................
+  test_kernel_1<<< NUM_BLOCKS, THREADS_PER_BLOCK >>>
+	(
+	 results.results_on_device,
+	 WIDTH_COLUMNS_X,
+	 HEIGHT_ROWS_Y,
+	 data_in_texture.texture
+	 );
+  
+  check_cuda_call( " kernel lauch " );
+
+  // .................................................................
+  // wait
+  // .................................................................
+  cudaDeviceSynchronize();
+
+  // .................................................................
+  // Copy results from memory device
+  // .................................................................
+  results.copy_results_device_to_host();
+
+  // show sth. to check if the kernel has done something
+  printf( " %f \n", results.results_on_host[10][15] );
+  printf( " %f \n", results.results_on_host[32][40] );
+
+  // .................................................................
+  // free the memory
+  // .................................................................
+  // Memory on the host (CPU)
+  cudaFree( p_data );
+  
+  // The memory for the results ( host and device ) is freed by
+  // the destructor of results
+
+  // The memory on the texture is freed by
+  // the destructor of data_texture
+
+  // .................................................................
+  // .................................................................
+  printf( " all done \n" );
+} // ()
+
+// ===================================================================
+// ===================================================================
+// ===================================================================
+// ===================================================================
