@@ -4,7 +4,7 @@ clean:
 all: a.out
 
 a.out: mainGeneral.cu
-	rm a.out
+	rm a.out || true
 	git pull
 	nvcc mainGeneral.cu	
 	./a.out
