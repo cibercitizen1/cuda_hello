@@ -1,7 +1,7 @@
-clean:
-	rm a.out
 
-all: a.out
+help:
+	@echo "make send"
+	@echo "make a.out"
 
 a.out: mainGeneral.cu
 	git pull
@@ -12,3 +12,8 @@ a.out: mainGeneral.cu
 send:
 	git commit -a -m "automatic commit"
 	git push
+
+download:
+	git fetch
+	git reset --hard
+	git merge
