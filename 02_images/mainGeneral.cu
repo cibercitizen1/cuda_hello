@@ -363,8 +363,8 @@ auto make_up_some_data(
   //
   //
   //
-  //return (T (*)[]) p_data;
-  return p_data;
+  //return p_data;
+  return (T (*)[]) p_data;
 
 } // ()
 
