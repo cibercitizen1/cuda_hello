@@ -133,7 +133,7 @@ int search_in_file(FILE * file_ref,
 inline void original_vs_estimated_differences (
 								const double * original_samples,
 								const double * estimated_samples,
-								const unsigned int instantes,
+								const unsigned int size,
 								double * differences, // out
 								double * squared_differences // out
 								)
@@ -142,7 +142,7 @@ inline void original_vs_estimated_differences (
   (*differences) = 0.0;
   (*squared_differences) = 0.0;
 
-  for (unsigned int i=0; i<instantes; i++) {
+  for (unsigned int i=0; i<size; i++) {
 	
 	double dif = original_samples[i]-estimated_samples[i];
 	(*differences) += dif;
