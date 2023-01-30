@@ -1,0 +1,11 @@
+help:
+	echo " read me, please "
+
+publish:
+	git commit -a -m "automatic commit"
+	git push
+
+download_force:
+	git fetch
+	git reset --hard
+	git merge
