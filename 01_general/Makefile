@@ -4,7 +4,10 @@ clean:
 all: a.out
 
 a.out: mainGeneral.cu
+	rm a.out
+	git pull
 	nvcc mainGeneral.cu	
+	./a.out
 
 send:
 	git commit -a -m "automatic commit"
