@@ -51,12 +51,13 @@ __global__ void test_kernel_1( uchar4 * p_results,
 	
   p_results[ (width * y_row) + x_column ] = new_pixel;
 
-  if (x_column == y_row) {
+  if (x_column == y_row || x_column == width-1 ) {
 	uchar4 uc4;
 	uc4.x = x_column;
 	uc4.y = y_row;
 	p_results[ (width * y_row) + x_column ] = uc4;
   }
+
 
   /*
 
