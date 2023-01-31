@@ -21,3 +21,8 @@ run: compile
 
 cpimage:
 	scp bataller@alinna.dsic.upv.es:/tmp/corrected.bmp .
+	
+clean:
+	rm -f a.out
+	rm -f corrected.bmp
+
