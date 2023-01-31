@@ -12,6 +12,6 @@ compile: mainGeneral.cu
 
 a.out: mainGeneral.cu
 	git pull
-	rm a.out || true
+	make -C $(LIB_DIR) cudalib
 	nvcc $(INCLUDE_FLAG) mainGeneral.cu	$(DIR_LIBS_FLAG) $(LIBS)
 	./a.out

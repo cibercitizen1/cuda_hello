@@ -111,6 +111,13 @@ auto make_up_some_data(
 int main( int n_args, char * args[] ) {
 
   printf( " starting \n" );
+  
+  Command_Line_Parser options( n_args, args );
+
+  // .................................................................
+  // pick the fastest device
+  // .................................................................
+  cudaSetDevice( cudaGetMaxGflopsDeviceId() );
 
   // .................................................................
   // Create the input data for the kernels
