@@ -35,6 +35,24 @@ T my_malloc( const long unsigned size )
 } // ()
 
 // ..................................................................
+/*
+  template<typename T, unsigned int NUM_ROWS, unsigned int NUM_COLUMNS>
+  auto my_malloc_2D_OK( ) {
+  auto ptr = new T[NUM_ROWS][NUM_COLUMNS];
+  if ( ptr == nullptr ) {
+  throw Malloc_Error {};
+  }
+  return ptr;
+  } // ()
+*/
+/*
+//auto kk = new int [10][20];
+// OK int (* kk)[20] = new int [10][20];
+int (* kk)[20] = new int [10][20];
+kk[9][2] = 13;
+*/
+
+// ..................................................................
 template<typename T>
 FILE * open_file_to_read(const char * name);
 

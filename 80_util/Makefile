@@ -1,21 +1,30 @@
-SOURCES = $(wildcard *.cpp)
-OBJECTS = $(SOURCES:.cpp=.o)
-NOMBRE_LIB=util
+CPP_SOURCES 	= $(wildcard *.cpp)
+CUDA_SOURCES 	= $(wildcard *.cu)
+OBJECTS 		= $(CPP_SOURCES:.cpp=.o) $(CUDA_SOURCES:.cu=.o)
+LIB_NAME		= myutil
 
-CC = g++
-CFLAGS = -I. 
-AR=ar 
+CC 		= g++
+NVCC 	= nvcc
+INCLUDE = -I. 
+AR		= ar 
 
 help:
-	@ echo  help: make lib, make clean
+	@ echo  help: make cudalib, make lib, make clean
 
-.cpp.o:
-	$(CC) $(CFLAGS) -c $<
+#.cpp.o:
+#$(CC) $(INCLUDE) -c $<
 
-lib: clean $(OBJECTS)
-	$(AR) r lib$(NOMBRE_LIB).a $(OBJECTS)
+lib: clean 
+	$(CC) $(INCLUDE) -c $(CPP_SOURCES)
+	$(AR) r lib$(LIB_NAME).a $(OBJECTS)
 	@ echo "library contents: ..................."
-	@ $(AR) t lib$(NOMBRE_LIB).a 
+	@ $(AR) t lib$(LIB_NAME).a 
+
+cudalib: clean 
+	$(NVCC)  $(INCLUDE) -c $(CPP_SOURCES) $(CUDA_SOURCES)
+	$(AR) r lib$(LIB_NAME).a $(OBJECTS)
+	@ echo "library contents: ..................."
+	@ $(AR) t lib$(LIB_NAME).a 
 
 clean:
 	rm -f $(OBJECTS) *.a
