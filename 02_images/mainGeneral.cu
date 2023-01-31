@@ -53,7 +53,8 @@ __global__ void test_kernel_1( uchar4 * p_results,
 
   if (x_column == y_row) {
 	uchar4 uc4;
-	uc4.x = 13;
+	uc4.x = x_column;
+	uc4.y = y_row;
 	p_results[ (width * y_row) + x_column ] = uc4;
   }
 
@@ -178,7 +179,7 @@ int main( int n_args, char * args[] ) {
 
   copy_removing_padding_4to3((unsigned char *) results.results_on_host, // from
 							 an_image.the_image.pixels, // to
-							 an_image.the_image.overall_size );
+							 an_image.the_image.overall_size + 400 );
   // .................................................................
   // save to disk
   // .................................................................
@@ -200,7 +201,7 @@ int main( int n_args, char * args[] ) {
   // .................................................................
   printf( " all done \n" );
 
-  pause( " the end " );
+  //pause( " the end " );
 } // ()
 
 // ===================================================================
