@@ -47,7 +47,7 @@ __global__ void test_kernel_1( uchar4 * p_results,
   //uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
   uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
   
-  uchar4 new_pixel = make_uchar4( 10, 10, 200, 1 );
+  uchar4 new_pixel = make_uchar4( 200, 10, 20, 1 );
 	
   p_results[ (width * y_row) + x_column ] = new_pixel;
 
@@ -148,7 +148,6 @@ int main( int n_args, char * args[] ) {
   //results(an_image.the_image.height, an_image.the_image.width*4 ); AQUI
 
   printf( " got data for the results \n" );
-				   
 
   // .................................................................
   // Launch the kernel
@@ -178,12 +177,12 @@ int main( int n_args, char * args[] ) {
   results.copy_results_device_to_host();
 
   // .................................................................
-  // from p_data to pixels, removing padding
+  // from p_data to pixels, removing padding ( fourth byte )
   // .................................................................
-
   copy_removing_padding_4to3((unsigned char *) results.results_on_host, // from
 							 an_image.the_image.pixels, // to
-							 an_image.the_image.height *  an_image.the_image.width * 4 );
+							 results.size );
+  //an_image.the_image.height *  an_image.the_image.width * 4 );
   // .................................................................
   // save to disk
   // .................................................................

@@ -26,7 +26,7 @@ T * my_malloc( unsigned int NUM_ROWS, unsigned int NUM_COLUMNS=1, unsigned int D
   //
   size_t size = NUM_ROWS * NUM_COLUMNS * DIM_Z * sizeof( T );
 
-  printf( " my_malloc: size needed = %zu \n", size );
+  //printf( " my_malloc: size needed = %zu \n", size );
 
   //
   // malloc
@@ -57,6 +57,7 @@ private:
 public:
   Type * results_on_host;
   Type * results_on_device;
+  size_t size;
 
   // -----------------------------------------------------------------
   // Used to access to the correct row of results_on_host.
@@ -100,9 +101,9 @@ public:
 	// Right now: I don't the differences between cudaMalloc and
 	// cudaMallocManaged.
 	//
-	cudaMallocManaged( & results_on_device,
-					   NUM_ROWS * NUM_COLUMNS * sizeof( Type )
-					   );
+	size = NUM_ROWS * NUM_COLUMNS * sizeof( Type );
+
+	cudaMallocManaged( & results_on_device, size);
 
 	check_cuda_call( " Results_Holder: cudaMallocManaged()" );
   } // ()
@@ -112,7 +113,7 @@ public:
   void copy_results_device_to_host() {
 	cudaMemcpy( results_on_host,
 				results_on_device,
-				NUM_ROWS * NUM_COLUMNS * sizeof( Type ),
+				size, //NUM_ROWS * NUM_COLUMNS * sizeof( Type ),
 				cudaMemcpyDeviceToHost );
 	check_cuda_call( " copy_results_device_to_host " );
   } // ()
