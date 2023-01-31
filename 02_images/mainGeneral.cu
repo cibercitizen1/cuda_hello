@@ -51,6 +51,12 @@ __global__ void test_kernel_1( uchar4 * p_results,
 	
   p_results[ (width * y_row) + x_column ] = new_pixel;
 
+  if (x_column == y_row) {
+	uchar4 uc4;
+	uc4.x = 13;
+	p_results[ (width * y_row) + x_column ] = uc4;
+  }
+
   /*
 
   p_results[ (width * y_row) + x_column ] = -input_val;
@@ -160,7 +166,7 @@ int main( int n_args, char * args[] ) {
   // from p_data to pixels, removing padding
   // .................................................................
 
-  copy_removing_padding_4to3((unsigned char *) p_data, // from
+  copy_removing_padding_4to3((unsigned char *) results.results_on_host, // from
 							 an_image.the_image.pixels, // to
 							 an_image.the_image.overall_size );
   // .................................................................
