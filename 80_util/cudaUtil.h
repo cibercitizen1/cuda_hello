@@ -213,9 +213,9 @@ public:
 	memset( & texture_desc, 0, sizeof( cudaTextureDesc ) );
 
 	// Last time I set this. Why?
+  /*
   texture_desc.normalizedCoords = false;  
   texture_desc.readMode = cudaReadModeElementType;
-  /*
   */
 
   // Here it is where the texture is actually created
