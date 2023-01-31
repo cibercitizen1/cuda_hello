@@ -19,14 +19,12 @@ void check_cuda_call( const char * msg );
 // from and to the GPU are faster.
 // ===================================================================
 template<typename T>
-T * my_malloc_2D( unsigned int NUM_ROWS, unsigned int NUM_COLUMNS) {
+T * my_malloc( unsigned int NUM_ROWS, unsigned int NUM_COLUMNS=1, unsigned int DIM_Z=1) {
   
   //
   // compute the size required
   //
-  size_t size = NUM_ROWS * NUM_COLUMNS * sizeof( T );
-
-  //printf( "my_malloc_2D(): rows=%d columns=%d, size=%d\n", NUM_ROWS, NUM_COLUMNS, size );
+  size_t size = NUM_ROWS * NUM_COLUMNS * DIM_Z * sizeof( T );
 
   //
   // malloc
@@ -34,12 +32,12 @@ T * my_malloc_2D( unsigned int NUM_ROWS, unsigned int NUM_COLUMNS) {
   T* ptr = nullptr;
   cudaMallocHost( & ptr, size );
 
-  check_cuda_call( "my_malloc_2D(): cudaMallocHost()" );
+  check_cuda_call( "my_malloc(): cudaMallocHost()" );
   
   //
   // make sure we've got memory
   //
-  assert( ptr != nullptr && "my_malloc_2D failed" );
+  assert( ptr != nullptr && "my_malloc failed" );
 
   //return ( T * [] ) ptr;
   return ptr;
@@ -49,14 +47,14 @@ T * my_malloc_2D( unsigned int NUM_ROWS, unsigned int NUM_COLUMNS) {
 // Utility class for allocating memory both on the device
 // and on the host.
 // ===================================================================
-template<typename T>
+template<typename Type>
 class Results_Holder {
 private:
   const unsigned int NUM_ROWS;
   const unsigned int NUM_COLUMNS;
 public:
-  T * results_on_host;
-  T * results_on_device;
+  Type * results_on_host;
+  Type * results_on_device;
 
   // -----------------------------------------------------------------
   // Used to access to the correct row of results_on_host.
@@ -65,12 +63,12 @@ public:
   // Example:
   // results[10][15]
   // -----------------------------------------------------------------
-  const T & operator()( unsigned int row, unsigned int col ) {
+  const Type& operator()( unsigned int row, unsigned int col ) {
 	return  results_on_host[ (row * NUM_COLUMNS) + col ];
   } // ()
 
   // -----------------------------------------------------------------
-  const T* operator[]( unsigned int row ) {
+  const Type* operator[]( unsigned int row ) {
 	return  & results_on_host[ (row * NUM_COLUMNS) ];
   } // ()
 
@@ -92,7 +90,7 @@ public:
 	//
 	// Get memory on the host.
 	//
-	results_on_host = my_malloc_2D< T >( NUM_ROWS, NUM_COLUMNS );
+	results_on_host = my_malloc< Type >( NUM_ROWS, NUM_COLUMNS );
   
 	//
 	// Get memory on the device. Regular memory I guess, i.e. not a texture.
@@ -101,7 +99,7 @@ public:
 	// cudaMallocManaged.
 	//
 	cudaMallocManaged( & results_on_device,
-					   NUM_ROWS * NUM_COLUMNS * sizeof( T )
+					   NUM_ROWS * NUM_COLUMNS * sizeof( Type )
 					   );
 
 	check_cuda_call( " Results_Holder: cudaMallocManaged()" );
@@ -112,7 +110,7 @@ public:
   void copy_results_device_to_host() {
 	cudaMemcpy( results_on_host,
 				results_on_device,
-				NUM_ROWS * NUM_COLUMNS * sizeof( T ),
+				NUM_ROWS * NUM_COLUMNS * sizeof( Type ),
 				cudaMemcpyDeviceToHost );
 	check_cuda_call( " copy_results_device_to_host " );
   } // ()
@@ -154,7 +152,7 @@ public:
   // constructor
   // -----------------------------------------------------------------
   Texture_Memory_Holder(
-						Type (*p_data)[],
+						Type *p_data,
 						unsigned int num_rows,
 						unsigned int num_columns
 						)
@@ -189,8 +187,6 @@ public:
 	//
 	channel_desc = cudaCreateChannelDesc< Type >();
 
-	//cudaCreateChannelDesc( 32, 0, 0, 0, cudaChannelFormatKindFloat );
-
 	check_cuda_call( " Texture_Memory_Holder: cudaCreateChannelDesc() " );
 
 	//
@@ -215,18 +211,18 @@ public:
 	memset( & texture_desc, 0, sizeof( cudaTextureDesc ) );
 
 	// Last time I set this. Why?
-	/*
-	  texture_desc.normalizedCoords = false;  
-	  texture_desc.readMode = cudaReadModeElementType;
-	*/
+  texture_desc.normalizedCoords = false;  
+  texture_desc.readMode = cudaReadModeElementType;
+  /*
+  */
 
-	// Here it is where the texture is actually created
-	cudaCreateTextureObject( & texture,
-							 & resource_desc,
-							 & texture_desc,
-							 nullptr );
+  // Here it is where the texture is actually created
+  cudaCreateTextureObject( & texture,
+      & resource_desc,
+      & texture_desc,
+      nullptr );
 
-	check_cuda_call( " Texture_Memory_Holder:  cudaCreateTextureObject() " );
+  check_cuda_call( " Texture_Memory_Holder:  cudaCreateTextureObject() " );
   } // ()
 
   // -----------------------------------------------------------------
@@ -242,21 +238,21 @@ inline int cudaGetMaxGflopsDeviceId() {
   cudaDeviceProp device_properties;
   int max_gflops_device = 0;
   int max_gflops = 0;
-		
+
   int current_device = 0;
   cudaGetDeviceProperties( &device_properties, current_device );
   max_gflops = device_properties.multiProcessorCount * device_properties.clockRate;
   ++current_device;
 
   while( current_device < device_count ) {
-	  cudaGetDeviceProperties( &device_properties, current_device );
-	  int gflops = device_properties.multiProcessorCount * device_properties.clockRate;
-	  if( gflops > max_gflops )
-		{
-		  max_gflops        = gflops;
-		  max_gflops_device = current_device;
-		}
-	  ++current_device;
+    cudaGetDeviceProperties( &device_properties, current_device );
+    int gflops = device_properties.multiProcessorCount * device_properties.clockRate;
+    if( gflops > max_gflops )
+    {
+      max_gflops        = gflops;
+      max_gflops_device = current_device;
+    }
+    ++current_device;
   } // while
 
   return max_gflops_device;

@@ -1,29 +1,27 @@
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
-NOMBRE_LIB=Imagenes
+LIB_NAME=images
 #OBJECTS = $(subst .cpp, .o, $(SOURCES))
 
-CC = g++
-#CC = nvcc
-CFLAGS = -I. 
-AR=ar 
+CC 		= g++
+NVCC 	= nvcc
+INCLUDE_FLAGS	= -I. -I../80_util
+AR		= ar 
 
 help:
-	@ echo  ayuda: make lib, make cudalib, make clean
+	@ echo  make lib, make cudalib, make clean
 
-.cpp.o:
-	$(CC) $(CFLAGS) -c $<
-
-lib: clean $(OBJECTS)
-	$(AR) r lib$(NOMBRE_LIB).a $(OBJECTS)
-	@ echo "contenido de la biblioteca ..................."
-	@ $(AR) t lib$(NOMBRE_LIB).a 
+lib: clean 
+	$(CC) -c $(INCLUDE_FLAGS) $(SOURCES)
+	$(AR) r lib$(LIB_NAME).a $(OBJECTS)
+	@ echo "library contents lib ..................."
+	@ $(AR) t lib$(LIB_NAME).a 
 
 cudalib: clean 
-	nvcc -c $(CFLAGS) $(SOURCES)
-	$(AR) r lib$(NOMBRE_LIB)Cuda.a $(OBJECTS)
-	@ echo "contenido de la biblioteca ..................."
-	@ $(AR) t lib$(NOMBRE_LIB)Cuda.a 
+	$(NVCC) -c $(INCLUDE_FLAGS) $(SOURCES)
+	$(AR) r lib$(LIB_NAME)Cuda.a $(OBJECTS)
+	@ echo "library contents cudalib ..................."
+	@ $(AR) t lib$(LIB_NAME)Cuda.a 
 
 clean:
 	rm -f $(OBJECTS) *.a

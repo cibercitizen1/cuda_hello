@@ -11,20 +11,17 @@ AR		= ar
 help:
 	@ echo  help: make cudalib, make lib, make clean
 
-#.cpp.o:
-#$(CC) $(INCLUDE) -c $<
-
 lib: clean 
 	$(CC) $(INCLUDE) -c $(CPP_SOURCES)
 	$(AR) r lib$(LIB_NAME).a $(OBJECTS)
-	@ echo "library contents: ..................."
+	@ echo "library contents: lib ..................."
 	@ $(AR) t lib$(LIB_NAME).a 
 
 cudalib: clean 
 	$(NVCC)  $(INCLUDE) -c $(CPP_SOURCES) $(CUDA_SOURCES)
-	$(AR) r lib$(LIB_NAME).a $(OBJECTS)
-	@ echo "library contents: ..................."
-	@ $(AR) t lib$(LIB_NAME).a 
+	$(AR) r lib$(LIB_NAME)Cuda.a $(OBJECTS)
+	@ echo "library contents: cudalib ..................."
+	@ $(AR) t lib$(LIB_NAME)Cuda.a 
 
 clean:
 	rm -f $(OBJECTS) *.a

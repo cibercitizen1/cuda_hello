@@ -19,9 +19,10 @@
 using namespace std;
 
 // ..................................................................
-//class Error_Malloc { };
+class Error_Malloc { };
 class Error_FileNotFound { };
 class Error_DirectoryNotFound { };
+class Error_ReadingFile { };
 
 // ..................................................................
 template<typename T>

@@ -30,11 +30,25 @@ const unsigned int BLOCK_SIDE = 8;
 dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 
 // ===================================================================
+// ===================================================================
+// As long as  we are using generated data (i.e. not read from a file),
+// we choose its size here.
+//const unsigned int WIDTH_COLUMNS_X = 128; //512;
+//const unsigned int HEIGHT_ROWS_Y = 256; //512;
+
+// type of the elements on the 2D input data
+//typedef float Element_Type; RGB_Byte (i.e. unsigned char)
+
+// type of the results
+//using Result_Type = float; RGB_Byte
+
+
+// ===================================================================
 //
 // kernel
 //
 // ===================================================================
-__global__ void test_kernel_1( uchar4 * p_results,
+__global__ void test_kernel_1( RGB_Byte * p_results,
 							   unsigned int width,
 							   unsigned int height,
 							   cudaTextureObject_t in_data_texture
@@ -43,15 +57,9 @@ __global__ void test_kernel_1( uchar4 * p_results,
   unsigned int x_column = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
 
-
-  //uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
-  uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
-  
-  uchar4 new_pixel = make_uchar4( 255, 255, 1, 0 );
-	
-  p_results[ (width * y_row) + x_column ] = new_pixel;
-
   /*
+  RGB_Byte input_val =
+	tex2D<Element_Type>( in_data_texture, x_column+0.5f, y_row+0.5f );
 
   p_results[ (width * y_row) + x_column ] = -input_val;
   */
@@ -65,8 +73,9 @@ __global__ void test_kernel_1( uchar4 * p_results,
 // ===================================================================
 int main( int n_args, char * args[] ) {
 
-  printf( " %zu \n ", sizeof( uchar4 ) );
-  printf( " %zu \n ", sizeof( PixelRGB ) );
+  printf( " %zu \n ", sizeof( RGB_Byte ) );
+  printf( " %zu \n ", sizeof( RGB_Type3 ) );
+  printf( " %zu \n ", sizeof( RGB_Type4 ) );
 
   printf( " starting \n" );
   
@@ -86,13 +95,13 @@ int main( int n_args, char * args[] ) {
 
   an_image.print_information();
 
-  uchar4* p_data =
-	my_malloc<uchar4>( an_image.the_image.height,
-						  an_image.the_image.width); // * 4 ); //  *4 !!!
+  RGB_Byte* p_data =
+	my_malloc<RGB_Byte>( an_image.the_image.height,
+							an_image.the_image.width * 4 ); //  *4 !!!
 
   copy_adding_padding_3to4( an_image.the_image.pixels, // from
-							(unsigned char *) p_data, // to
-							an_image.the_image.overall_size /* with 3 bytes 
+							p_data, // to
+							an_image.the_image.overall_size /* 3 bytes 
 															 * per pixel*/ );
 					 
  
@@ -102,11 +111,10 @@ int main( int n_args, char * args[] ) {
   printf( " %d == %d ? \n", an_image.the_image.width*4, 
 		  an_image.the_image.bytes_per_row );
 
-  Texture_Memory_Holder<uchar4>
+  Texture_Memory_Holder<RGB_Byte>
 	data_in_texture(  p_data,
 					  an_image.the_image.height,
-					  an_image.the_image.width );
-  //an_image.the_image.width * 4);
+					  an_image.the_image.width * 4);
 
   printf( " placed input data in device memory, bound to a texture \n" );
 					   
@@ -114,7 +122,7 @@ int main( int n_args, char * args[] ) {
   // Get memory to hold the results (on the GPU and on the CPU)
   // Let's suppose that we get a result for each input element.
   // .................................................................
-  Results_Holder<uchar4>
+  Results_Holder<RGB_Byte>
 	results(an_image.the_image.height, an_image.the_image.width*4 );
 
   printf( " got data for the results \n" );
@@ -160,7 +168,7 @@ int main( int n_args, char * args[] ) {
   // from p_data to pixels, removing padding
   // .................................................................
 
-  copy_removing_padding_4to3((unsigned char *) p_data, // from
+  copy_removing_padding_4to3(p_data, // from
 							 an_image.the_image.pixels, // to
 							 an_image.the_image.overall_size );
   // .................................................................

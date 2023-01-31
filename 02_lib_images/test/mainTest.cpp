@@ -6,20 +6,20 @@
 #include <iostream>
 using namespace std;
 
-#include <ImagenBMP.h>
+#include <ImageBMP.h>
 
 //.........................................................
-int mainOtro () {
+int main_two () {
 
-  cout << "hola" << endl;
+  cout << "hi" << endl;
 
-  PixelRGB azul = {255, 100, 100};
-  ImagenBMP imagen1 (512, 512);
+  PixelRGB blue = {255, 100, 100};
+  ImageBMP image1 (512, 512);
 
-  ImagenBMP imagen2 (512, 512, azul);
+  ImageBMP image2 (512, 512, blue);
 
-  imagen1.guardarEnFichero ("kk.bmp");
-  imagen2.guardarEnFichero ("qq.bmp");
+  image1.save_to_file("kk.bmp");
+  image2.save_to_file("qq.bmp");
 
   return 0;
 } // main ()
@@ -29,37 +29,42 @@ int main() {
 
   cout << "hola" << endl;
 
-  ImagenBMP imagen1 (0, 0);
+  ImageBMP image1 (0, 0);
 
-  // ImagenBMP imagen2 ("Lena.bmp");
-  ImagenBMP imagen2 ("patoC.bmp");
-  // ImagenBMP imagen2 ("Mona.bmp");
-  // ImagenBMP imagen2 ("prova.bmp");
-  // ImagenBMP imagen2 ("prova2.bmp");
+  // ImageBMP image2 ("Lena.bmp");
+  ImageBMP image2 ("patoC.bmp");
+  // ImageBMP image2 ("Mona.bmp");
+  // ImageBMP image2 ("prova.bmp");
+  // ImageBMP image2 ("prova2.bmp");
 
-  cout << " la mia " << endl;
-  imagen1.muestraInfo();
+  cout << " image 1" << endl;
+  image1.print_information();
 
-  cout << endl << " una correcta " << endl;
-  imagen2.muestraInfo();
+  cout << endl << " loaded image" << endl;
+  image2.print_information();
 
-  cout << " vamos a copiar " << endl;
-  imagen1 = imagen2;
+  cout << " let's copy" << endl;
+  image1 = image2;
 
-  cout << " la mia copiada de la correcta" << endl;
-  imagen1.muestraInfo();
+  cout << " info of the copied image " << endl;
+  image1.print_information();
 
   /*
 
-  imagen.guardarEnFichero ("kk.bmp");
+  image.save_to_file ("kk.bmp");
 
-  Imagen * pIm = leerImagenDeFichero("kk.bmp");  // polimorfico
+  Image * pIm = read_image_from_file("kk.bmp");  // polymorphic
 
-  (*pIm).guardarEnFichero("qq.bmp");
+  (*pIm).save_image_to_file("qq.bmp");
   */
 
-  cout << "adios" << endl;
+  cout << "bye bye" << endl;
 
-  imagen1.guardarEnFichero ("kk.bmp");
+  image1.save_to_file ("kk.bmp");
 
 } // main ()
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+//---------------------------------------------------------
+//---------------------------------------------------------

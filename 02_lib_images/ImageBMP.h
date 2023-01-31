@@ -1,9 +1,9 @@
-/* ImagenBMP.h */
+/* ImageBMP.h */
 
-#ifndef IMAGENBMP_H
-#define IMAGENBMP_H
+#ifndef IMAGE_BMP_H
+#define IMAGE_BMP_H
 
-#include<Imagen.h>
+#include<Image.h>
 
 /* .........................................................
 */
@@ -13,7 +13,7 @@ typedef struct {
   unsigned int size; 
   unsigned short int reserved1,reserved2; 
   unsigned int offset; 
-} BmpFichCabecera1;
+} BmpFile_Header1;
 
 /* .........................................................
 */
@@ -23,61 +23,62 @@ typedef struct {
   int width; // 4
   int height;  // 4
   unsigned short int planes;  // 2
-  unsigned short int bitsPixel;  // 2
+  unsigned short int bits_per_pixel;  // 2
   unsigned int compression;  // 4
   unsigned int imagesize;  // 4
   int xresolution,yresolution; 
   unsigned int ncolors;  // 4
   unsigned int importantcolors;  // 4
-} BmpFichCabecera2;
+} BmpFile_Header2;
 
 /* .........................................................
 */
 
 /* .........................................................
 */
-class ImagenBMP : public Imagen 
+class ImageBMP : public Image 
 {
  private:
-  BmpFichCabecera1 cabecera1;
-  BmpFichCabecera2 cabecera2;
-  void liberarPixels();
-  static const PixelRGB pixelBlanco; /* constante pero se incializa en el .cpp */
+  BmpFile_Header1 header1;
+  BmpFile_Header2 header2;
+  void free_pixels();
+  static const PixelRGB white_pixel; /* constante pero se incializa en el .cpp */
 
  public:
 
-  ImagenRGB  laImagen; /* ojo: idealmente deberia ser privada,
-						* pero es publica para que se pueda
-						* acceder "a bajo nivel" desde 
-						* programas "solo en C" */
+  ImageRGB  the_image; /* it should be private,
+						* but we need to access it
+						* at "low level": from
+						* "only C" programs */
 
-  ImagenBMP(const char * nombreFich) ;
+  ImageBMP(const char * file_name) ;
 
-  ImagenBMP(const unsigned int alto, 
+  ImageBMP(const unsigned int alto, 
 			const unsigned int ancho,
-			PixelRGB color = pixelBlanco);
+			PixelRGB color = white_pixel);
 
   /* acceso a pixel dado f, c */
   PixelRGB * pixel (const unsigned int f, const unsigned int c);
 
-  void guardarEnFichero(const char * nombreFich) const;
+  void save_to_file(const char * file_name) const;
 
-  void muestraInfo() const;
+  void print_information() const;
 
-  void operator=(const ImagenBMP &);
+  void operator=(const ImageBMP &);
 
-  ~ImagenBMP();
+  ~ImageBMP();
 }; /* class */
 
 /* .........................................................
 */
-void copiaPoniendoPading3a4 (const unsigned char * fuente, 
-						unsigned char * destino,
+void copy_adding_padding_3to4 (const unsigned char * p_source, 
+						unsigned char * p_destination,
 						unsigned int tamanyo);
 
-void copiaQuitandoPading4a3 (const unsigned char * fuente, 
-						unsigned char * destino,
-						unsigned int tamanyo);
+void copy_removing_padding_4to3(
+								const unsigned char * p_source, 
+								unsigned char * p_destination,
+								unsigned int size);
 
 #endif 
 

@@ -3,14 +3,14 @@
 
 /* .........................................................
 */
-#include <metricas.h>
+#include <metrics.h>
 #include <math.h>
 #include <stdio.h>
 #include <iostream>
 
 /* .........................................................
 */
-SI_EN_GPU float distanciaEuclidea (PixelRGB* p1, PixelRGB* p2) {
+IF_GPU float euclidean_distance (PixelRGB* p1, PixelRGB* p2) {
 
   int dr = p1->r - p2->r;
   int dg = p1->g - p2->g;
@@ -24,14 +24,14 @@ SI_EN_GPU float distanciaEuclidea (PixelRGB* p1, PixelRGB* p2) {
 
 /* .........................................................
 */
-#define mayor(a,b) ((a)>=(b) ? (a) : (b))
-#define menor(a,b) ((a)<=(b) ? (a) : (b))
+#define greater_equal_than(a,b) ((a)>=(b) ? (a) : (b))
+#define lesser_equal_than(a,b) ((a)<=(b) ? (a) : (b))
 
-SI_EN_GPU float distanciaFuzzy1 (PixelRGB* p1, PixelRGB* p2) {
+IF_GPU float fuzzy_distance_1 (PixelRGB* p1, PixelRGB* p2) {
 
-  int a = menor(p1->r,p2->r) / mayor(p1->r,p2->r);
-  int b = menor(p1->g,p2->g) / mayor(p1->g,p2->g);
-  int c = menor(p1->b,p2->b) / mayor(p1->b,p2->b);
+  int a = lesser_equal_than(p1->r,p2->r) / greater_equal_than(p1->r,p2->r);
+  int b = lesser_equal_than(p1->g,p2->g) / greater_equal_than(p1->g,p2->g);
+  int c = lesser_equal_than(p1->b,p2->b) / greater_equal_than(p1->b,p2->b);
 
   float dist = a * b * c;
   
@@ -39,9 +39,8 @@ SI_EN_GPU float distanciaFuzzy1 (PixelRGB* p1, PixelRGB* p2) {
 } 
 
 /* .........................................................
-*/
-// SI_EN_GPU float distancia(PixelRGB* p1, PixelRGB* p2) {
-SI_EN_GPU float distanciaDiferencias (PixelRGB* p1, PixelRGB* p2) {
+ */
+IF_GPU float differences_distance (PixelRGB* p1, PixelRGB* p2) {
 
   int dr = p1->r - p2->r;
   int dg = p1->g - p2->g;
@@ -56,20 +55,9 @@ SI_EN_GPU float distanciaDiferencias (PixelRGB* p1, PixelRGB* p2) {
   return  dist;
 } 
 
-SI_EN_GPU float distanciaDiferenciasPrueba (PixelRGB* p1, PixelRGB* p2) {
-
-  int dr = p1->r & (~(p2->r));
-  int dg = p1->g & (~(p2->g));
-  int db = p1->b & (~(p2->b));
-
-  float dist = (dr+dg+db);
-  
-  return  dist;
-} 
-
 /* .........................................................
-*/
-SI_EN_GPU void media(PixelRGB* pix[], unsigned int n, PixelRGB * res) {
+ */
+IF_GPU void mean_of_pixels(PixelRGB* pix[], unsigned int n, PixelRGB * res) {
 
   if (n==0) {
 	return; 
@@ -80,12 +68,6 @@ SI_EN_GPU void media(PixelRGB* pix[], unsigned int n, PixelRGB * res) {
   unsigned int sumB = 0;
   unsigned int i;
   
-  /* pruebas
-  printf ("--->%x\n",  pix );
-  printf ("--->%d\n",  pix[0].r );
-  printf ("---> ja esta \n");
-  */
-
   for (i=0; i<=n-1; i++) {
 	sumR += pix[i]->r;
 	sumG += pix[i]->g;
@@ -99,8 +81,8 @@ SI_EN_GPU void media(PixelRGB* pix[], unsigned int n, PixelRGB * res) {
 } /* () */
 
 /* .........................................................
-*/
-SI_EN_GPU void mediaC(PixelRGB pix[], unsigned int n, PixelRGB * res) {
+ */
+IF_GPU void mean_of_pixels_(PixelRGB pix[], unsigned int n, PixelRGB * res) {
 
   if (n==0) {
 	return; 

@@ -2,10 +2,10 @@ SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 #OBJECTS = $(subst .cpp, .o, $(SOURCES))
 
-NOMBRE_LIB=Imagenes
+LIB_NAME=images
 
 CC = g++
-CFLAGS = -I..
+CFLAGS = -I.. -I../../80_util
 
 help:
 	@ echo  ayuda: make test, make clean
@@ -15,10 +15,11 @@ help:
 
 test: $(OBJECTS)
 	(cd .. ; make lib)
-	$(CC) -L.. $(OBJECTS) -l$(NOMBRE_LIB) -o run.test
+	$(CC) -L.. $(OBJECTS) -l$(LIB_NAME) -o run.test
 
 clean:
 	rm -f $(OBJECTS) 
+	rm -f kk*
 
 
 

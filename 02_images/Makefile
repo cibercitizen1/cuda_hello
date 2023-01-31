@@ -1,17 +1,20 @@
 
 include ../makefile_h
 
-LIB_DIR			= ../80_util
-INCLUDE_FLAG	= -I$(LIB_DIR) -I.
-DIR_LIBS_FLAG	= -L$(LIB_DIR)
-LIBS			= -lmyutil
+UTIL_DIR			= ../80_util
+IMAGE_DIR			= ../02_lib_images
+INCLUDE_FLAG	= -I$(UTIL_DIR) -I$(IMAGE_DIR) 
+DIR_LIBS_FLAG	= -L$(UTIL_DIR) -L$(IMAGE_DIR)
+LIBS			= -lmyutil -limages
+CUDA_LIBS			= -lmyutilCuda -limagesCuda
 
 compile: mainGeneral.cu
-	make -C $(LIB_DIR) cudalib
-	nvcc $(INCLUDE_FLAG) mainGeneral.cu	$(DIR_LIBS_FLAG) $(LIBS)
+	make -C $(UTIL_DIR) cudalib
+	make -C $(IMAGE_DIR) cudalib
+	nvcc $(INCLUDE_FLAG) mainGeneral.cu	$(DIR_LIBS_FLAG) $(CUDA_LIBS)
 
-a.out: mainGeneral.cu
-	git pull
-	make -C $(LIB_DIR) cudalib
-	nvcc $(INCLUDE_FLAG) mainGeneral.cu	$(DIR_LIBS_FLAG) $(LIBS)
-	./a.out
+alinna: 
+	#git pull
+
+run: compile
+	a.out image=../90_data/patoC.bmp 
