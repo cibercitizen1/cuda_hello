@@ -19,8 +19,11 @@ alinna:
 run: compile
 	a.out image=../90_data/patoC.bmp 
 
-cpimage:
+getimage:
 	scp bataller@alinna.dsic.upv.es:/tmp/corrected.bmp .
+
+sendimage:
+	mv corrected.bmp /tmp/corrected.bmp 
 	
 clean:
 	rm -f a.out
