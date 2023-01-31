@@ -47,7 +47,7 @@ __global__ void test_kernel_1( uchar4 * p_results,
   //uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
   uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
   
-  uchar4 new_pixel = make_uchar4( 10, 255, 10, 1 );
+  uchar4 new_pixel = make_uchar4( 10, 10, 200, 1 );
 	
   p_results[ (width * y_row) + x_column ] = new_pixel;
 
@@ -95,7 +95,8 @@ int main( int n_args, char * args[] ) {
   printf( "------------------------------------------------------\n" );
 
   // .................................................................
-  // set up the launch of kernels
+  // set up the number of kernel blocks accordingly to
+  // the image dimension
   // .................................................................
   // Number of blocks we need considering a thread per element (pixel)
   // in the 2D data
@@ -112,15 +113,16 @@ int main( int n_args, char * args[] ) {
 
   printf( "------------------------------------------------------\n" );
   printf( "------------------------------------------------------\n" );
-  uchar4* p_data =
+  uchar4* p_data = // matrix of 4 unsigned char
 	my_malloc<uchar4>( an_image.the_image.height,
-						  an_image.the_image.width); // * 4 ); //  *4 !!!
+						  an_image.the_image.width); 
 
+  // the bmp image has 3 unsigned bytes per pixel
+  // (there are actually .overall_size bytes)
+  // So, we add a fourth.
   copy_adding_padding_3to4( an_image.the_image.pixels, // from
 							(unsigned char *) p_data, // to
-							an_image.the_image.overall_size /* with 3 bytes 
-															 * per pixel*/ );
-					 
+							an_image.the_image.overall_size );
  
   // .................................................................
   // Copy the input data to the device, in a texture
@@ -141,7 +143,8 @@ int main( int n_args, char * args[] ) {
   // Let's suppose that we get a result for each input element.
   // .................................................................
   Results_Holder<uchar4>
-	results(an_image.the_image.height, an_image.the_image.width*4 );
+	results(an_image.the_image.height, an_image.the_image.width );
+  //results(an_image.the_image.height, an_image.the_image.width*4 ); AQUI
 
   printf( " got data for the results \n" );
 				   
@@ -179,7 +182,7 @@ int main( int n_args, char * args[] ) {
 
   copy_removing_padding_4to3((unsigned char *) results.results_on_host, // from
 							 an_image.the_image.pixels, // to
-							 an_image.the_image.overall_size + 400 );
+							 an_image.the_image.height *  an_image.the_image.width * 4 );
   // .................................................................
   // save to disk
   // .................................................................
