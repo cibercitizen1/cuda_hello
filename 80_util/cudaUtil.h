@@ -26,6 +26,8 @@ T * my_malloc( unsigned int NUM_ROWS, unsigned int NUM_COLUMNS=1, unsigned int D
   //
   size_t size = NUM_ROWS * NUM_COLUMNS * DIM_Z * sizeof( T );
 
+  printf( " my_malloc: size needed = %zu \n", size );
+
   //
   // malloc
   //

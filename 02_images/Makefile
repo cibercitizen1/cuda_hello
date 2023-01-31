@@ -21,7 +21,7 @@ run: compile
 	mv corrected.bmp /tmp/corrected.bmp 
 
 getimage:
-	scp bataller@alinna.dsic.upv.es:/tmp/corrected.bmp .
+	scp bataller@alinna.dsic.upv.es:/tmp/corrected.bmp /media/sf_compartit
 	
 clean:
 	rm -f a.out

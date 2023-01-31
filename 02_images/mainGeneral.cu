@@ -47,7 +47,7 @@ __global__ void test_kernel_1( uchar4 * p_results,
   //uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
   uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
   
-  uchar4 new_pixel = make_uchar4( 255, 255, 1, 0 );
+  uchar4 new_pixel = make_uchar4( 10, 255, 10, 1 );
 	
   p_results[ (width * y_row) + x_column ] = new_pixel;
 
@@ -71,9 +71,6 @@ __global__ void test_kernel_1( uchar4 * p_results,
 // ===================================================================
 int main( int n_args, char * args[] ) {
 
-  printf( " %zu \n ", sizeof( uchar4 ) );
-  printf( " %zu \n ", sizeof( PixelRGB ) );
-
   printf( " starting \n" );
   
   Command_Line_Parser options( n_args, args );
@@ -86,12 +83,34 @@ int main( int n_args, char * args[] ) {
   // .................................................................
   // load a bmp image
   // .................................................................
+  printf( "------------------------------------------------------\n" );
   printf( " loaded image %s\n", options.option_value<string>("image").c_str() );
+  printf( "------------------------------------------------------\n" );
   
   ImageBMP an_image( options.option_value<string>("image").c_str() );
 
   an_image.print_information();
+  printf( "------------------------------------------------------\n" );
+  printf( "------------------------------------------------------\n" );
 
+  // .................................................................
+  // set up the launch of kernels
+  // .................................................................
+  // Number of blocks we need considering a thread per element (pixel)
+  // in the 2D data
+  // Defined in 2D.
+  //
+  dim3 NUM_BLOCKS( an_image.the_image.width / THREADS_PER_BLOCK.x,
+				   an_image.the_image.height / THREADS_PER_BLOCK.y );
+
+  printf( " num blocs x =  %d \n", NUM_BLOCKS.x );
+  printf( " threads in x %d \n", THREADS_PER_BLOCK.x );
+  printf( " num blocs y =  %d \n", NUM_BLOCKS.y );
+  printf( " threads in y %d \n", THREADS_PER_BLOCK.y );
+  printf( " total threads ---> %d \n", NUM_BLOCKS.x * THREADS_PER_BLOCK.x * NUM_BLOCKS.y * THREADS_PER_BLOCK.y );
+
+  printf( "------------------------------------------------------\n" );
+  printf( "------------------------------------------------------\n" );
   uchar4* p_data =
 	my_malloc<uchar4>( an_image.the_image.height,
 						  an_image.the_image.width); // * 4 ); //  *4 !!!
@@ -125,15 +144,6 @@ int main( int n_args, char * args[] ) {
 
   printf( " got data for the results \n" );
 				   
-  // .................................................................
-  // set up the launch of kernels
-  // .................................................................
-  // Number of blocks we need considering a thread per element (pixel)
-  // in the 2D data
-  // Defined in 2D.
-  //
-  dim3 NUM_BLOCKS( an_image.the_image.width / THREADS_PER_BLOCK.x,
-				   an_image.the_image.height / THREADS_PER_BLOCK.y );
 
   // .................................................................
   // Launch the kernel
