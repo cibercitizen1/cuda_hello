@@ -13,5 +13,5 @@ compile: mainGeneral.cu
 a.out: mainGeneral.cu
 	git pull
 	rm a.out || true
-	nvcc mainGeneral.cu	
+	nvcc $(INCLUDE_FLAG) mainGeneral.cu	$(DIR_LIBS_FLAG) $(LIBS)
 	./a.out
