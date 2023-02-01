@@ -37,7 +37,6 @@ __global__ void kernel_detect( cuda4bytes * p_results, // -> results
   p_results[ (width * y_row) + x_column ] =
   my_rgba_to_cuda4bytes( neighbour_pixels[0] );
 
-
   //
   // control test
   //
