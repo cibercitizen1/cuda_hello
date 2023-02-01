@@ -40,7 +40,9 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 // ===================================================================
 // Please,read cudaImageUtil.h
 	
-#include <metrics.cpp>
+#include <metrics.cpp> // it seems that __device__ functions
+// must be in the same compilation unit
+
 #include <kernel_detect.cu>
 
 #define WHAT_KERNEL_TO_RUN kernel_detect
@@ -50,7 +52,7 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 // kernel
 //
 // ===================================================================
-__global__ void test_kernel_2( cuda4bytes * p_results, // -> results
+__global__ void test_kernel_1( cuda4bytes * p_results, // -> results
 							   const unsigned int width, // <-
 							   const unsigned int height, // <- 
 							   cudaTextureObject_t in_data_texture // <- data in
@@ -75,7 +77,7 @@ __global__ void test_kernel_2( cuda4bytes * p_results, // -> results
   p_results[ (width * y_row) + x_column ] = my_rgba_to_cuda4bytes( input_pixel );
 
   //
-  // control test
+  // control setting
   //
   if (x_column == y_row || x_column == width-1 ) {
 	cuda4bytes uc4;
@@ -84,44 +86,8 @@ __global__ void test_kernel_2( cuda4bytes * p_results, // -> results
 	p_results[ (width * y_row) + x_column ] = uc4;
   }
 	
-} // ()
-
-// ===================================================================
-//
-// kernel
-//
-// ===================================================================
-__global__ void test_kernel_1( cuda4bytes * p_results,
-							   unsigned int width,
-							   unsigned int height,
-							   cudaTextureObject_t in_data_texture
-							   ) {
-
-  // find out this thread's coordinates
-  unsigned int x_column = (blockIdx.x * blockDim.x) + threadIdx.x;
-  unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
-
-  // read the pixel assigned to this thread
-  //cuda4bytes input_pixel = tex2D<cuda4bytes>( in_data_texture, x_column+0.5f, y_row+0.5f );
-  cuda4bytes input_pixel = access_element( in_data_texture, x_column, y_row );
-  
-  // make up a new pixel
-  PixelRGBA new_pixel { .b=200, .g=123, .r=123, .a=123 };
-  
-  //
-  cuda4bytes new_cuda4bytes = my_rgba_to_cuda4bytes( new_pixel );
-  
+  //PixelRGBA new_pixel { .b=200, .g=123, .r=123, .a=123 };
   //cuda4bytes new_cuda4bytes = make_cuda4bytes( 200, 10, 20, 1 );
-	
-  p_results[ (width * y_row) + x_column ] = new_cuda4bytes;
-
-  if (x_column == y_row || x_column == width-1 ) {
-	cuda4bytes uc4;
-	uc4.x = x_column;
-	uc4.y = y_row;
-	p_results[ (width * y_row) + x_column ] = uc4;
-  }
-	
 } // ()
 
 // ===================================================================
@@ -130,6 +96,9 @@ __global__ void test_kernel_1( cuda4bytes * p_results,
 //
 // ===================================================================
 int main( int n_args, char * args[] ) {
+
+  unsigned int t0 = 0;
+  unsigned int t1 = 0;
 
   printf( " starting \n" );
   
@@ -183,6 +152,11 @@ int main( int n_args, char * args[] ) {
 	get_memory_and_copy_with_padding_3to4( & an_image );
   
   // .................................................................
+  // start the clock
+  // .................................................................
+  t0 = clock();
+
+  // .................................................................
   // Copy the input data to the device, in a texture
   // .................................................................
   Texture_Memory_Holder<cuda4bytes>
@@ -230,6 +204,11 @@ int main( int n_args, char * args[] ) {
   // Copy results from memory device
   // .................................................................
   results.copy_results_device_to_host();
+  
+  // .................................................................
+  // stop the clock
+  // .................................................................
+  t1 = clock();
 
   // .................................................................
   // from input_4byte_pixels to pixels, removing padding ( fourth byte )
@@ -256,6 +235,12 @@ int main( int n_args, char * args[] ) {
 
   // The memory on the texture is freed by
   // the destructor of data_texture
+
+  // .................................................................
+  // .................................................................
+  printf( " ********************************************* \n" );
+  printf( " elapsed tie = %d \n", t1-t0 );
+  printf( " ********************************************* \n" );
 
   // .................................................................
   // .................................................................
