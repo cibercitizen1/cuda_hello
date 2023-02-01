@@ -24,6 +24,7 @@ __global__ void kernel_detect( cuda4bytes * p_results, // -> results
   // delete the blue value
   //
   input_pixel.r = 128;
+  input_pixel.g = 128;
   
   //
   // copy the new value to results
