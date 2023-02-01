@@ -12,6 +12,7 @@
 
 #include <cudaUtil.h>
 #include <cudaImageUtil.h>
+#include <metrics.h>
 
 //#include <cuda.h>
 // #include <typeinfo>

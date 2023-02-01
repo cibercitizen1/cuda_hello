@@ -19,14 +19,12 @@ alinna: publish
 	# getimage
 	scp bataller@alinna.dsic.upv.es:/tmp/corrected.bmp /media/sf_compartit
 
-
 run: compile
 	./a.out image=../90_data/patoC.bmp 
 	mv corrected.bmp /tmp/corrected.bmp 
 
 getimage:
 	scp bataller@alinna.dsic.upv.es:/tmp/corrected.bmp /media/sf_compartit
-
 
 clean:
 	rm -f a.out

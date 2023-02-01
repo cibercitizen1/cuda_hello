@@ -1,5 +1,7 @@
 
-/* metricas.cpp */
+// ---------------------------------------------------------
+/* metrics.cpp */
+// ---------------------------------------------------------
 
 /* .........................................................
 */
@@ -10,7 +12,7 @@
 
 /* .........................................................
 */
-IF_GPU float euclidean_distance (PixelRGB* p1, PixelRGB* p2) {
+IF_GPU float euclidean_distance (PixelRGBA* p1, PixelRGBA* p2) {
 
   int dr = p1->r - p2->r;
   int dg = p1->g - p2->g;
@@ -27,7 +29,7 @@ IF_GPU float euclidean_distance (PixelRGB* p1, PixelRGB* p2) {
 #define greater_equal_than(a,b) ((a)>=(b) ? (a) : (b))
 #define lesser_equal_than(a,b) ((a)<=(b) ? (a) : (b))
 
-IF_GPU float fuzzy_distance_1 (PixelRGB* p1, PixelRGB* p2) {
+IF_GPU float fuzzy_distance_1 (PixelRGBA* p1, PixelRGBA* p2) {
 
   int a = lesser_equal_than(p1->r,p2->r) / greater_equal_than(p1->r,p2->r);
   int b = lesser_equal_than(p1->g,p2->g) / greater_equal_than(p1->g,p2->g);
@@ -40,7 +42,7 @@ IF_GPU float fuzzy_distance_1 (PixelRGB* p1, PixelRGB* p2) {
 
 /* .........................................................
  */
-IF_GPU float differences_distance (PixelRGB* p1, PixelRGB* p2) {
+IF_GPU float differences_distance (PixelRGBA* p1, PixelRGBA* p2) {
 
   int dr = p1->r - p2->r;
   int dg = p1->g - p2->g;
@@ -57,7 +59,7 @@ IF_GPU float differences_distance (PixelRGB* p1, PixelRGB* p2) {
 
 /* .........................................................
  */
-IF_GPU void mean_of_pixels(PixelRGB* pix[], unsigned int n, PixelRGB * res) {
+IF_GPU void mean_of_pixels_wtf(PixelRGBA* pix[], unsigned int n, PixelRGBA * res) {
 
   if (n==0) {
 	return; 
@@ -82,7 +84,8 @@ IF_GPU void mean_of_pixels(PixelRGB* pix[], unsigned int n, PixelRGB * res) {
 
 /* .........................................................
  */
-IF_GPU void mean_of_pixels_(PixelRGB pix[], unsigned int n, PixelRGB * res) {
+//IF_GPU void mean_of_pixels(PixelRGBA pix[], unsigned int n, PixelRGBA * res) {
+__device__ void mean_of_pixels(PixelRGBA pix[], unsigned int n, PixelRGBA * res) {
 
   if (n==0) {
 	return; 
@@ -105,3 +108,7 @@ IF_GPU void mean_of_pixels_(PixelRGB pix[], unsigned int n, PixelRGB * res) {
 
 } /* () */
 
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
