@@ -84,8 +84,7 @@ IF_GPU void mean_of_pixels_wtf(PixelRGBA* pix[], unsigned int n, PixelRGBA * res
 
 /* .........................................................
  */
-//IF_GPU void mean_of_pixels(PixelRGBA pix[], unsigned int n, PixelRGBA * res) {
-__device__ void mean_of_pixels(PixelRGBA pix[], unsigned int n, PixelRGBA * res) {
+IF_GPU void mean_of_pixels(PixelRGBA pix[], unsigned int n, PixelRGBA * res) {
 
   if (n==0) {
 	return; 

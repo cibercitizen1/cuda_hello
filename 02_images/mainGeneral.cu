@@ -40,6 +40,7 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 // ===================================================================
 // Please,read cudaImageUtil.h
 	
+#include <metrics.cpp>
 #include <kernel_detect.cu>
 
 #define WHAT_KERNEL_TO_RUN kernel_detect
