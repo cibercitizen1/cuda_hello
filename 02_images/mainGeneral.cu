@@ -39,6 +39,7 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 // ===================================================================
 // Please,read cudaImageUtil.h
 	
+#define WHAT_KERNEL_TO_RUN test_kernel_2
 // ===================================================================
 //
 // kernel
@@ -176,26 +177,13 @@ int main( int n_args, char * args[] ) {
   cuda4bytes* input_4byte_pixels = 
 	get_memory_and_copy_with_padding_3to4( & an_image );
   
-  /*
-  cuda4bytes* input_4byte_pixels = // matrix of 4 unsigned char
-	my_malloc<cuda4bytes>( an_image.the_image.height, an_image.the_image.width); 
-
-  copy_adding_padding_3to4( an_image.the_image.pixels, // from
-							(unsigned char *) input_4byte_pixels, // to
-							an_image.the_image.overall_size );
-  */
- 
   // .................................................................
   // Copy the input data to the device, in a texture
   // .................................................................
-  printf( " %d == %d ? \n", an_image.the_image.width*4, 
-		  an_image.the_image.bytes_per_row );
-
   Texture_Memory_Holder<cuda4bytes>
 	data_in_texture(  input_4byte_pixels, // from
 					  an_image.the_image.height, // h x w
 					  an_image.the_image.width );
-  //an_image.the_image.width * 4);
 
   printf( " placed input data in device memory, bound to a texture \n" );
 					   
@@ -213,7 +201,9 @@ int main( int n_args, char * args[] ) {
   // Launch the kernel
   // .................................................................
   printf( " launching kernels \n" );
-  test_kernel_2<<< NUM_BLOCKS, THREADS_PER_BLOCK >>>
+	//test_kernel_2<<< NUM_BLOCKS, THREADS_PER_BLOCK >>>
+
+  WHAT_KERNEL_TO_RUN<<< NUM_BLOCKS, THREADS_PER_BLOCK >>>
 	(
 	 results.results_on_device,
 	 an_image.the_image.width,
@@ -238,6 +228,8 @@ int main( int n_args, char * args[] ) {
 
   // .................................................................
   // from input_4byte_pixels to pixels, removing padding ( fourth byte )
+  // now copy froom results.results_on_host
+  // to the pointer pixels in the image, so we can save them
   // .................................................................
   copy_removing_padding_4to3((unsigned char *) results.results_on_host, // from
 							 an_image.the_image.pixels, // to
