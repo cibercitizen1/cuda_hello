@@ -51,12 +51,13 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 // We defined a PixelRGBA struct (see Image.h) supposedly having
 // 4 bytes, but it appears no to work well with cuda functions.
 //
-// A "4 bytes struct" is defined in cuda as uchar4.
-// As a consequence, we will be using uchar4.
+// A "4 bytes struct" is defined in cuda as cuda_4bytes.
+// As a consequence, we will be using cuda_4bytes.
+using cuda_4bytes = uchar4;
 //
 // Addition predefined cuda functions
 //                                 blue, green red, alpha?
-// uchar4 new_pixel = make_uchar4( 200, 10, 20, 1 );
+// cuda_4bytes new_pixel = make_cuda_4bytes( 200, 10, 20, 1 );
 //
 //
 // Let's define some helper functions for us.
@@ -64,7 +65,7 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 //
 //
 //
-__device__ inline PixelRGBA my_uchar4_to_rgba( uchar4 src ) {
+__device__ inline PixelRGBA my_cuda4bytes_to_rgba( cuda_4bytes & src ) {
   PixelRGBA dest;
 
   dest.r = src.z;
@@ -78,8 +79,8 @@ __device__ inline PixelRGBA my_uchar4_to_rgba( uchar4 src ) {
 //
 //
 //
-__device__ inline uchar4 my_rgba_to_uchar4( PixelRGBA src ) {
-  uchar4 dest;
+__device__ inline cuda_4bytes my_rgba_to_cuda4bytes( PixelRGBA & src ) {
+  cuda_4bytes dest;
   
   dest.z = src.r;
   dest.y = src.g;
@@ -92,57 +93,57 @@ __device__ inline uchar4 my_rgba_to_uchar4( PixelRGBA src ) {
 //
 //
 //
-template<typename Type = uchar4>
-__device__ inline auto access_element( cudaTextureObject_t tex,
+template<typename Type = cuda_4bytes>
+__device__ inline auto access_element( const cudaTextureObject_t & tex,
 									   unsigned int x_column,
 									   unsigned int y_row ) {
   return tex2D<Type>( tex, x_column+0.5f, y_row+0.5f );
 } // ()
 
 
-__device__ inline auto access_pixel( cudaTextureObject_t tex,
+__device__ inline auto access_pixel( const cudaTextureObject_t & tex,
 									 unsigned int x_column,
 									 unsigned int y_row ) {
-  uchar4 input_uchar4 = access_element( tex, x_column, y_row );
-  PixelRGBA input_pixel = my_uchar4_to_rgba( input_uchar4 );
+  cuda_4bytes input_cuda_4bytes = access_element( tex, x_column, y_row );
+  PixelRGBA input_pixel = my_cuda4bytes_to_rgba( input_cuda_4bytes );
   return input_pixel;
 }
-
-
 	
 // ===================================================================
 //
 // kernel
 //
 // ===================================================================
-__global__ void test_kernel_2( uchar4 * p_results,
-							   unsigned int width,
-							   unsigned int height,
-							   cudaTextureObject_t in_data_texture
+__global__ void test_kernel_2( cuda_4bytes * p_results, // -> results
+							   const unsigned int width, // <-
+							   const unsigned int height, // <- 
+							   cudaTextureObject_t in_data_texture // <- data in
 							   ) {
 
   // find out this thread's coordinates
-  unsigned int x_column = (blockIdx.x * blockDim.x) + threadIdx.x;
-  unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
+  const unsigned int x_column = (blockIdx.x * blockDim.x) + threadIdx.x;
+  const unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
 
   // read the pixel assigned to this thread
-  /*
-  uchar4 input_uchar4 = access_element( in_data_texture, x_column, y_row );
-  PixelRGBA input_pixel = my_uchar4_to_rgba( input_uchar4 );
-  */
   PixelRGBA input_pixel = access_pixel( in_data_texture, x_column, y_row );
   
+  //
+  // do some processing
   // delete the blue value
-  input_pixel.r = 0;
+  //
+  input_pixel.r = 100;
   input_pixel.b = 128;
   
   //
-  uchar4 new_uchar4 = my_rgba_to_uchar4( input_pixel );
-	
-  p_results[ (width * y_row) + x_column ] = new_uchar4;
+  // copy the new value to results
+  //
+  p_results[ (width * y_row) + x_column ] = my_rgba_to_cuda4bytes( input_pixel );
 
+  //
+  // control test
+  //
   if (x_column == y_row || x_column == width-1 ) {
-	uchar4 uc4;
+	cuda_4bytes uc4;
 	uc4.x = x_column;
 	uc4.y = y_row;
 	p_results[ (width * y_row) + x_column ] = uc4;
@@ -150,12 +151,13 @@ __global__ void test_kernel_2( uchar4 * p_results,
 	
 } // ()
 
+
 // ===================================================================
 //
 // kernel
 //
 // ===================================================================
-__global__ void test_kernel_1( uchar4 * p_results,
+__global__ void test_kernel_1( cuda_4bytes * p_results,
 							   unsigned int width,
 							   unsigned int height,
 							   cudaTextureObject_t in_data_texture
@@ -166,21 +168,21 @@ __global__ void test_kernel_1( uchar4 * p_results,
   unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
 
   // read the pixel assigned to this thread
-  //uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
-  uchar4 input_pixel = access_element( in_data_texture, x_column, y_row );
+  //cuda_4bytes input_pixel = tex2D<cuda_4bytes>( in_data_texture, x_column+0.5f, y_row+0.5f );
+  cuda_4bytes input_pixel = access_element( in_data_texture, x_column, y_row );
   
   // make up a new pixel
   PixelRGBA new_pixel { .b=200, .g=123, .r=123, .a=123 };
   
   //
-  uchar4 new_uchar4 = my_rgba_to_uchar4( new_pixel );
+  cuda_4bytes new_cuda4bytes = my_rgba_to_cuda4bytes( new_pixel );
   
-  //uchar4 new_uchar4 = make_uchar4( 200, 10, 20, 1 );
+  //cuda_4bytes new_cuda_4bytes = make_cuda_4bytes( 200, 10, 20, 1 );
 	
-  p_results[ (width * y_row) + x_column ] = new_uchar4;
+  p_results[ (width * y_row) + x_column ] = new_cuda4bytes;
 
   if (x_column == y_row || x_column == width-1 ) {
-	uchar4 uc4;
+	cuda_4bytes uc4;
 	uc4.x = x_column;
 	uc4.y = y_row;
 	p_results[ (width * y_row) + x_column ] = uc4;
@@ -236,8 +238,8 @@ int main( int n_args, char * args[] ) {
 
   printf( "------------------------------------------------------\n" );
   printf( "------------------------------------------------------\n" );
-  uchar4* p_data = // matrix of 4 unsigned char
-	my_malloc<uchar4>( an_image.the_image.height,
+  cuda_4bytes* p_data = // matrix of 4 unsigned char
+	my_malloc<cuda_4bytes>( an_image.the_image.height,
 					   an_image.the_image.width); 
 
   // the bmp image has 3 unsigned bytes per pixel
@@ -253,7 +255,7 @@ int main( int n_args, char * args[] ) {
   printf( " %d == %d ? \n", an_image.the_image.width*4, 
 		  an_image.the_image.bytes_per_row );
 
-  Texture_Memory_Holder<uchar4>
+  Texture_Memory_Holder<cuda_4bytes>
 	data_in_texture(  p_data,
 					  an_image.the_image.height,
 					  an_image.the_image.width );
@@ -265,7 +267,7 @@ int main( int n_args, char * args[] ) {
   // Get memory to hold the results (on the GPU and on the CPU)
   // Let's suppose that we get a result for each input element.
   // .................................................................
-  Results_Holder<uchar4>
+  Results_Holder<cuda_4bytes>
 	results(an_image.the_image.height, an_image.the_image.width );
   //results(an_image.the_image.height, an_image.the_image.width*4 ); AQUI
 
