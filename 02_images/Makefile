@@ -16,6 +16,9 @@ compile: clean mainGeneral.cu
 
 alinna: publish
 	ssh -t bataller@alinna.dsic.upv.es "cd cuda/cuda_hello/02_images ; make download_force ; make run NVCC=/usr/local/cuda/bin/nvcc"
+	# getimage
+	scp bataller@alinna.dsic.upv.es:/tmp/corrected.bmp /media/sf_compartit
+
 
 run: compile
 	./a.out image=../90_data/patoC.bmp 
