@@ -21,7 +21,7 @@ __global__ void kernel_detect( cuda4bytes * p_results, // -> results
   // read the eight neighbour pixels
   PixelRGBA neighbour_pixels[8];
 
-  neighbour_pixels[0] = access_pixel( in_data_texture, x_column+1, y_row+1 );
+  neighbour_pixels[0] = access_pixel( in_data_texture, x_column+20, y_row );
 
   
   //
