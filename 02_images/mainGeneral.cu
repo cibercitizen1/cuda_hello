@@ -33,7 +33,8 @@
 // operate on 2D data.
 
 //const unsigned int BLOCK_SIDE = 8;
-const unsigned int BLOCK_SIDE = 32;
+//const unsigned int BLOCK_SIDE = 32;
+const unsigned int BLOCK_SIDE = 2;
 dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 
 // ===================================================================
@@ -239,7 +240,7 @@ int main( int n_args, char * args[] ) {
   // .................................................................
   // .................................................................
   printf( " ********************************************* \n" );
-  printf( " elapsed tie = %d \n", t1-t0 );
+  printf( " elapsed time = %d \n", t1-t0 );
   printf( " ********************************************* \n" );
 
   // .................................................................
