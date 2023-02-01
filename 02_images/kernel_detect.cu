@@ -4,8 +4,6 @@
 //
 // ===================================================================
 
-#define WHAT_KERNEL_TO_RUN kernel_detect
-
 __global__ void kernel_detect( cuda4bytes * p_results, // -> results
 							   const unsigned int width, // <-
 							   const unsigned int height, // <- 

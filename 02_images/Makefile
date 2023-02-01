@@ -3,7 +3,7 @@ include ../makefile_h
 
 UTIL_DIR			= ../80_util
 IMAGE_DIR			= ../02_lib_images
-INCLUDE_FLAG	= -I$(UTIL_DIR) -I$(IMAGE_DIR) 
+INCLUDE_FLAG	= -I. -I$(UTIL_DIR) -I$(IMAGE_DIR) 
 DIR_LIBS_FLAG	= -L$(UTIL_DIR) -L$(IMAGE_DIR)
 LIBS			= -lmyutil -limages
 CUDA_LIBS			= -lmyutilCuda -limagesCuda

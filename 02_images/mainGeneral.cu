@@ -39,7 +39,10 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 // ===================================================================
 // Please,read cudaImageUtil.h
 	
-#define WHAT_KERNEL_TO_RUN test_kernel_2
+#include <kernel_detect.cu>
+
+#define WHAT_KERNEL_TO_RUN kernel_detect
+
 // ===================================================================
 //
 // kernel
