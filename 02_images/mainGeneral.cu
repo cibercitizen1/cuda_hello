@@ -60,6 +60,10 @@ dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
 //
 //
 // Let's define some helper functions for us.
+
+//
+//
+//
 __device__ inline PixelRGBA my_uchar4_to_rgba( uchar4 src ) {
   PixelRGBA dest;
 
@@ -71,6 +75,9 @@ __device__ inline PixelRGBA my_uchar4_to_rgba( uchar4 src ) {
   return dest;
 } // ()
 
+//
+//
+//
 __device__ inline uchar4 my_rgba_to_uchar4( PixelRGBA src ) {
   uchar4 dest;
   
@@ -80,6 +87,52 @@ __device__ inline uchar4 my_rgba_to_uchar4( PixelRGBA src ) {
   dest.w = src.a;
 
   return dest;
+} // ()
+
+//
+//
+//
+template<typename Type = uchar4>
+__device__ inline auto access_element( cudaTextureObject_t tex,
+									   unsigned int x_column,
+									   unsigned int y_row ) {
+  return tex2D<Type>( tex, x_column+0.5f, y_row+0.5f );
+} // ()
+	
+// ===================================================================
+//
+// kernel
+//
+// ===================================================================
+__global__ void test_kernel_2( uchar4 * p_results,
+							   unsigned int width,
+							   unsigned int height,
+							   cudaTextureObject_t in_data_texture
+							   ) {
+
+  // find out this thread's coordinates
+  unsigned int x_column = (blockIdx.x * blockDim.x) + threadIdx.x;
+  unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
+
+  // read the pixel assigned to this thread
+  uchar4 input_uchar4 = access_element( in_data_texture, x_column, y_row );
+  PixelRGBA input_pixel = my_uchar4_to_rgba( input_uchar4 );
+  
+  // delete the blue value
+  input_pixel.b = 0;
+  
+  //
+  uchar4 new_uchar4 = my_rgba_to_uchar4( input_pixel );
+	
+  p_results[ (width * y_row) + x_column ] = new_uchar4;
+
+  if (x_column == y_row || x_column == width-1 ) {
+	uchar4 uc4;
+	uc4.x = x_column;
+	uc4.y = y_row;
+	p_results[ (width * y_row) + x_column ] = uc4;
+  }
+	
 } // ()
 
 // ===================================================================
@@ -98,7 +151,8 @@ __global__ void test_kernel_1( uchar4 * p_results,
   unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
 
   // read the pixel assigned to this thread
-  uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
+  //uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
+  uchar4 input_pixel = access_element( in_data_texture, x_column, y_row );
   
   // make up a new pixel
   PixelRGBA new_pixel { .b=200, .g=123, .r=123, .a=123 };
@@ -116,12 +170,6 @@ __global__ void test_kernel_1( uchar4 * p_results,
 	uc4.y = y_row;
 	p_results[ (width * y_row) + x_column ] = uc4;
   }
-
-
-
-
-
-
 	
 } // ()
 
@@ -175,7 +223,7 @@ int main( int n_args, char * args[] ) {
   printf( "------------------------------------------------------\n" );
   uchar4* p_data = // matrix of 4 unsigned char
 	my_malloc<uchar4>( an_image.the_image.height,
-						  an_image.the_image.width); 
+					   an_image.the_image.width); 
 
   // the bmp image has 3 unsigned bytes per pixel
   // (there are actually .overall_size bytes)
@@ -212,7 +260,7 @@ int main( int n_args, char * args[] ) {
   // Launch the kernel
   // .................................................................
   printf( " launching kernels \n" );
-  test_kernel_1<<< NUM_BLOCKS, THREADS_PER_BLOCK >>>
+  test_kernel_2<<< NUM_BLOCKS, THREADS_PER_BLOCK >>>
 	(
 	 results.results_on_device,
 	 an_image.the_image.width,
