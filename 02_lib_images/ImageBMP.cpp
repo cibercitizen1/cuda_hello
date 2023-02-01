@@ -1,4 +1,8 @@
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 /* ImageBMP.cpp */
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 
 #include <ImageBMP.h>
 #include <stdio.h>
@@ -6,6 +10,15 @@
 #include <string.h>
 
 /* .........................................................
+*/
+/*
+Image * read_bmp_image_from_file(const char *  file_name) {
+  return new ImageBMP(file_name);
+}
+*/
+
+/* .........................................................
+  constructor
 */
 ImageBMP::ImageBMP(const char *  file_name) {
   FILE *file_ref;
@@ -22,11 +35,11 @@ ImageBMP::ImageBMP(const char *  file_name) {
 	throw Error_FileNotFound();
   }
 
-  /* leo las headers */
-  fread( & header1,sizeof(BmpFile_Header1),1,file_ref); 
-  fread( & header2,sizeof(BmpFile_Header2),1,file_ref); 
+  /* read headers */
+  fread( & header1,sizeof(BMP_File_Header1),1,file_ref); 
+  fread( & header2,sizeof(BMP_File_Header2),1,file_ref); 
 
-  /* averiguo width, height y bits x pixel */
+  /* find out width, height, bits x pixel */
   the_image.width = header2.width;
   the_image.height = header2.height;
 
@@ -36,18 +49,18 @@ ImageBMP::ImageBMP(const char *  file_name) {
 
   the_image.bits_per_pixel = header2.bits_per_pixel; 
 
-  /* leo los pixels */
-  /* posicionamos en el file_refero para leer los pixels */
+  /* read the pixels */
+  /* set the position where they start */
 
   if ( fseek (file_ref, header1.offset,SEEK_SET) != 0 ) {
-	/* printf (" no nos hemos posicionado para leer \n"); */
+	/* printf (" error in fseek \n"); */
 	free_pixels();
 	throw Error_ReadingFile{};
   }
 
   unsigned long int n_bytes_to_read = the_image.overall_size;
 
-  /* crear la memoria para el array de bytes */
+  /* get memory for the bytes */
   the_image.pixels = (unsigned char *) malloc ( n_bytes_to_read ); 
   if ( the_image.pixels == 0 ) {
 	free_pixels();
@@ -55,7 +68,7 @@ ImageBMP::ImageBMP(const char *  file_name) {
 	throw;
   }
 
-  /* leerlos del file_refero */
+  /* read the bytes */
   unsigned long int n_read;
   n_read = fread(the_image.pixels, 1, n_bytes_to_read, file_ref); 
   if ( n_read != n_bytes_to_read ) {
@@ -63,19 +76,21 @@ ImageBMP::ImageBMP(const char *  file_name) {
 	throw Error_ReadingFile();
   }
 
-  /* cierro el file_refero */
+  /* close the file */
   fclose (file_ref);
-}
-
+} // ()
 
 /* .........................................................
 */
 const PixelRGB ImageBMP::white_pixel = {255,255,255};
 
+/* .........................................................
+  constructor
+*/
 ImageBMP::ImageBMP(const unsigned int height, const unsigned int width,
 					 PixelRGB color) {
 
-  // relleno los campos de ImageRGB
+  // fill in the fields of ImageRGB
   the_image.height = height;
   the_image.width = width;
   the_image.bits_per_pixel = 24; // 24 bits = 8 bytes <= RGB
@@ -84,7 +99,7 @@ ImageBMP::ImageBMP(const unsigned int height, const unsigned int width,
   the_image.pixels = 0;
   the_image.overall_size = the_image.bytes_per_row * the_image.height;
 
-  // memoria para los pixels de la  imagen
+  // get memory for the pixels 
   if (the_image.overall_size > 0) {
 	the_image.pixels = (unsigned char *) malloc ( the_image.overall_size ); 
 	if ( the_image.pixels == nullptr ) {
@@ -121,7 +136,7 @@ ImageBMP::ImageBMP(const unsigned int height, const unsigned int width,
   header2.ncolors = 0;
   header2.importantcolors = 0;
 
-} 
+}  // constructor
 
 /* .........................................................
 */
@@ -131,13 +146,13 @@ void ImageBMP::free_pixels() {
   }
   free ( the_image.pixels );
   the_image.pixels  = 0;
-}
+} // ()
 
 /* .........................................................
 */
 ImageBMP::~ImageBMP() {
   free_pixels();
-}
+} // ()
 
 /* .........................................................
 */
@@ -149,18 +164,18 @@ void ImageBMP::save_to_file(const char * file_name) const {
 	return;
   }
 
-  fwrite( & header1, sizeof(BmpFile_Header1),1,fout); 
-  fwrite( & header2, sizeof(BmpFile_Header2),1,fout); 
+  fwrite( & header1, sizeof(BMP_File_Header1),1,fout); 
+  fwrite( & header2, sizeof(BMP_File_Header2),1,fout); 
   fwrite( the_image.pixels, 1 , header2.imagesize, fout);
 
   fclose (fout);
-}
+} // ()
 
 /* .........................................................
 */
 void ImageBMP::print_information() const {
   printf (" ImageRGB ---------\n ");
-  printf (" height=%d width=%d bytes_per_row=%d bytes_per_rowSinPad=%d overall_size=%d\n",
+  printf (" height=%d width=%d bytes_per_row=%d bytes_per_row (without pad) =%d overall_size (without pad pixel=3 bytes)=%d\n",
 		  the_image.height,
 		  the_image.width,
 		  the_image.bytes_per_row,
@@ -186,9 +201,10 @@ void ImageBMP::print_information() const {
 		  header2.yresolution,
 		  header2.ncolors,
 		  header2.importantcolors);
-}
+} // ()
 
 /* .........................................................
+  copy with =
 */
 void ImageBMP::operator=(const ImageBMP & other) {
 
@@ -203,47 +219,52 @@ void ImageBMP::operator=(const ImageBMP & other) {
   /* copy image including pixels */
   copy_rgb_image(& other.the_image,  &the_image);
 
-}
+} // ()
 
 /* .........................................................
+   access a pixel 
 */
-PixelRGB * ImageBMP::pixel (const unsigned int f, const unsigned int c) {
-  return get_pixel ( &(*this).the_image, f, c);
+PixelRGB * ImageBMP::pixel (const unsigned int row, const unsigned int col) {
+  return get_pixel ( &(*this).the_image, row, col);
 } // ()
 
 /* .........................................................
 */
-void copy_adding_padding_3to4 (const unsigned char * p_source, 
-							 unsigned char * p_destination,
-							 unsigned int tamanyoP_Source) 
-{
+void copy_adding_padding_3to4 (
+							   const unsigned char * p_source, 
+							   unsigned char * p_destination,
+							   unsigned int size) {
   unsigned int j=0;
-  for (unsigned int i=0; i<=tamanyoP_Source-1; i++) 
-	{
-	  p_destination[j] = p_source[i];
-	  if (i%3 == 2) {
-		j++;
-		p_destination[j] = 0;
-	  }
-
+  for (unsigned int i=0; i<size; i++) {
+	p_destination[j] = p_source[i];
+	if (i%3 == 2) {
+	  // each time the 3rd byte (index 2) is copied, add a fourth (value = 0) 
 	  j++;
-	}
+	  p_destination[j] = 0;
+	} // if
+
+	j++;
+  } // for
 } // ()
 
 /* .........................................................
-*/
-void copy_removing_padding_4to3 (const unsigned char * p_source, 
-						unsigned char * p_destination,
-						unsigned int size)
-{
+ */
+void copy_removing_padding_4to3 (
+								 const unsigned char * p_source, 
+								 unsigned char * p_destination,
+								 unsigned int size) {
   
   unsigned int j=0;
-  for (unsigned int i=0; i<=size-1; i++) 
-	{
-	  if ( (i%4) < 3 ) 
-		{
-		  p_destination[j] = p_source[i];
-		  j++;
-		}
+  for (unsigned int i=0; i<=size-1; i++) {
+	if ( (i%4) < 3 ) {
+	  // copy only bytes 0 1 and 2, not the fourth
+	  p_destination[j] = p_source[i];
+	  j++;
 	}
+  } // for
 } // ()
+
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------

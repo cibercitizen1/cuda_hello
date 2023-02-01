@@ -7,12 +7,6 @@
 
 #include <util.h>
 
-// .........................................................
-// .........................................................
-//using RGB_Byte = unsigned char;
-//using RGB_Type3 = struct { unsigned char r, g, b; }; 
-//using RGB_Type4 = struct { unsigned char r, g, b, pad; }; 
-
 /* .........................................................
 */
 typedef struct ImageRGB {

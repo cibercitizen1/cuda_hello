@@ -1,4 +1,8 @@
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 /* ImageBMP.h */
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 
 #ifndef IMAGE_BMP_H
 #define IMAGE_BMP_H
@@ -13,7 +17,7 @@ typedef struct {
   unsigned int size; 
   unsigned short int reserved1,reserved2; 
   unsigned int offset; 
-} BmpFile_Header1;
+} BMP_File_Header1;
 
 /* .........................................................
 */
@@ -29,7 +33,7 @@ typedef struct {
   int xresolution,yresolution; 
   unsigned int ncolors;  // 4
   unsigned int importantcolors;  // 4
-} BmpFile_Header2;
+} BMP_File_Header2;
 
 /* .........................................................
 */
@@ -39,8 +43,8 @@ typedef struct {
 class ImageBMP : public Image 
 {
  private:
-  BmpFile_Header1 header1;
-  BmpFile_Header2 header2;
+  BMP_File_Header1 header1;
+  BMP_File_Header2 header2;
   void free_pixels();
   static const PixelRGB white_pixel; /* constante pero se incializa en el .cpp */
 
@@ -82,3 +86,7 @@ void copy_removing_padding_4to3(
 
 #endif 
 
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
