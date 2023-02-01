@@ -14,7 +14,7 @@ compile: clean mainGeneral.cu
 	nvcc $(INCLUDE_FLAG) mainGeneral.cu	$(DIR_LIBS_FLAG) $(CUDA_LIBS)
 
 alinna: publish
-	ssh bataller@alinna.dsic.upv.es "cd cuda/cuda_hello/02_images ; make run"
+	ssh -t bataller@alinna.dsic.upv.es "cd cuda/cuda_hello/02_images ; make run"
 
 run: download_force compile
 	a.out image=../90_data/patoC.bmp 
