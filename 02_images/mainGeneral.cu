@@ -138,7 +138,7 @@ int main( int n_args, char * args[] ) {
   // load a bmp image
   // .................................................................
   printf( "------------------------------------------------------\n" );
-  printf( " loaded image %s\n", options.option_value<string>("image").c_str() );
+  printf( " loading image %s\n", options.option_value<string>("image").c_str() );
   printf( "------------------------------------------------------\n" );
   
   ImageBMP an_image( options.option_value<string>("image").c_str() );
@@ -166,16 +166,24 @@ int main( int n_args, char * args[] ) {
 
   printf( "------------------------------------------------------\n" );
   printf( "------------------------------------------------------\n" );
-  cuda4bytes* p_data = // matrix of 4 unsigned char
-	my_malloc<cuda4bytes>( an_image.the_image.height,
-					   an_image.the_image.width); 
 
-  // the bmp image has 3 unsigned bytes per pixel
-  // (there are actually .overall_size bytes)
-  // So, we add a fourth.
+  // .................................................................
+  // The image already has in memory its pixels.
+  // But because bmp are 3 bytes per pixel,
+  // we are now allocating host memory to copy the original
+  // pixels adding a padding 4th byte.
+  // .................................................................
+  cuda4bytes* input_4byte_pixels = 
+	get_memory_and_copy_with_padding_3to4( & an_image );
+  
+  /*
+  cuda4bytes* input_4byte_pixels = // matrix of 4 unsigned char
+	my_malloc<cuda4bytes>( an_image.the_image.height, an_image.the_image.width); 
+
   copy_adding_padding_3to4( an_image.the_image.pixels, // from
-							(unsigned char *) p_data, // to
+							(unsigned char *) input_4byte_pixels, // to
 							an_image.the_image.overall_size );
+  */
  
   // .................................................................
   // Copy the input data to the device, in a texture
@@ -184,8 +192,8 @@ int main( int n_args, char * args[] ) {
 		  an_image.the_image.bytes_per_row );
 
   Texture_Memory_Holder<cuda4bytes>
-	data_in_texture(  p_data,
-					  an_image.the_image.height,
+	data_in_texture(  input_4byte_pixels, // from
+					  an_image.the_image.height, // h x w
 					  an_image.the_image.width );
   //an_image.the_image.width * 4);
 
@@ -229,7 +237,7 @@ int main( int n_args, char * args[] ) {
   results.copy_results_device_to_host();
 
   // .................................................................
-  // from p_data to pixels, removing padding ( fourth byte )
+  // from input_4byte_pixels to pixels, removing padding ( fourth byte )
   // .................................................................
   copy_removing_padding_4to3((unsigned char *) results.results_on_host, // from
 							 an_image.the_image.pixels, // to
@@ -244,7 +252,7 @@ int main( int n_args, char * args[] ) {
   // free the memory
   // .................................................................
   // Memory on the host (CPU)
-  cudaFree( p_data );
+  cudaFree( input_4byte_pixels );
   
   // The memory for the results ( host and device ) is freed by
   // the destructor of results

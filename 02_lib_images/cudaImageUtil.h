@@ -35,9 +35,8 @@ using cuda4bytes = uchar4;
 //
 // Let's define some helper functions for us.
 
-//
-//
-//
+// ...................................................................
+// ...................................................................
 __device__ inline PixelRGBA my_cuda4bytes_to_rgba( cuda4bytes & src ) {
   PixelRGBA dest;
 
@@ -49,9 +48,8 @@ __device__ inline PixelRGBA my_cuda4bytes_to_rgba( cuda4bytes & src ) {
   return dest;
 } // ()
 
-//
-//
-//
+// ...................................................................
+// ...................................................................
 __device__ inline cuda4bytes my_rgba_to_cuda4bytes( PixelRGBA & src ) {
   cuda4bytes dest;
   
@@ -63,9 +61,8 @@ __device__ inline cuda4bytes my_rgba_to_cuda4bytes( PixelRGBA & src ) {
   return dest;
 } // ()
 
-//
-//
-//
+// ...................................................................
+// ...................................................................
 template<typename Type = cuda4bytes>
 __device__ inline auto access_element( const cudaTextureObject_t & tex,
 									   unsigned int x_column,
@@ -74,12 +71,44 @@ __device__ inline auto access_element( const cudaTextureObject_t & tex,
 } // ()
 
 
+// ...................................................................
+// ...................................................................
 __device__ inline auto access_pixel( const cudaTextureObject_t & tex,
 									 unsigned int x_column,
 									 unsigned int y_row ) {
   cuda4bytes input_cuda4bytes = access_element( tex, x_column, y_row );
   PixelRGBA input_pixel = my_cuda4bytes_to_rgba( input_cuda4bytes );
   return input_pixel;
-}
+} // ()
+
+// ===================================================================
+// ===================================================================
+
+  // .................................................................
+  // An image already has in memory its pixels.
+  // But because bmp are 3 bytes per pixel,
+  // we are now allocating host memory to copy the original
+  // pixels adding a padding 4th byte.
+  // .................................................................
+inline
+cuda4bytes * get_memory_and_copy_with_padding_3to4( Image * p_image ) {
+
+  cuda4bytes* input_4byte_pixels = // matrix of 4 unsigned char
+	my_malloc<cuda4bytes>( (*p_image).the_image.height, (*p_image).the_image.width); 
+
+  // the bmp image has 3 unsigned bytes per pixel
+  // (there are actually .overall_size bytes)
+  // So, we add a fourth.
+  copy_adding_padding_3to4( (*p_image).the_image.pixels, // from
+							(unsigned char *) input_4byte_pixels, // to
+							(*p_image).the_image.overall_size );
+ 
+  return input_4byte_pixels;
+} // ()
 
 #endif
+
+// ===================================================================
+// ===================================================================
+// ===================================================================
+// ===================================================================
