@@ -6,14 +6,6 @@
 
 /* .........................................................
 */
-/*
-Image * read_image_from_file(const char *  file_name) {
-  return new ImageBMP(file_name);
-}
-*/
-
-/* .........................................................
-*/
 void copy_rgb_image(const ImageRGB * p_source,
 					ImageRGB * p_destination) {
 
