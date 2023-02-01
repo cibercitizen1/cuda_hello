@@ -87,8 +87,10 @@ const PixelRGB ImageBMP::white_pixel = {255,255,255};
 /* .........................................................
   constructor
 */
-ImageBMP::ImageBMP(const unsigned int height, const unsigned int width,
-					 PixelRGB color) {
+ImageBMP::ImageBMP(
+				   const unsigned int height, // num. of rows
+				   const unsigned int width, // num. of width
+				   PixelRGB color) {
 
   // fill in the fields of ImageRGB
   the_image.height = height;
@@ -139,7 +141,7 @@ ImageBMP::ImageBMP(const unsigned int height, const unsigned int width,
 }  // constructor
 
 /* .........................................................
-*/
+ */
 void ImageBMP::free_pixels() {
   if (the_image.pixels == 0) {
 	return;
@@ -149,13 +151,13 @@ void ImageBMP::free_pixels() {
 } // ()
 
 /* .........................................................
-*/
+ */
 ImageBMP::~ImageBMP() {
   free_pixels();
 } // ()
 
 /* .........................................................
-*/
+ */
 void ImageBMP::save_to_file(const char * file_name) const {
   FILE * fout;
   fout = fopen(file_name,"w"); 
@@ -172,7 +174,7 @@ void ImageBMP::save_to_file(const char * file_name) const {
 } // ()
 
 /* .........................................................
-*/
+ */
 void ImageBMP::print_information() const {
   printf (" ImageRGB ---------\n ");
   printf (" height=%d width=%d bytes_per_row=%d bytes_per_row (without pad) =%d overall_size (without pad pixel=3 bytes)=%d\n",
@@ -204,7 +206,7 @@ void ImageBMP::print_information() const {
 } // ()
 
 /* .........................................................
-  copy with =
+   copy with =
 */
 void ImageBMP::operator=(const ImageBMP & other) {
 
@@ -229,7 +231,7 @@ PixelRGB * ImageBMP::pixel (const unsigned int row, const unsigned int col) {
 } // ()
 
 /* .........................................................
-*/
+ */
 void copy_adding_padding_3to4 (
 							   const unsigned char * p_source, 
 							   unsigned char * p_destination,

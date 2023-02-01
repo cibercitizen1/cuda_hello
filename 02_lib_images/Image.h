@@ -19,13 +19,17 @@ typedef struct ImageRGB {
   unsigned int overall_size;  // 4
 } ImageRGB;
 
-/* para acceder a un pixel dado un puntero al anterior
+/* .........................................................
+*/
+/*  to access a pixel, given a ptr to the struct above
  * struct y (f,c) */
 #define get_pixel(imPtr, f,c) \
   (PixelRGB*) & (*(imPtr)).pixels[((f)*(*imPtr).bytes_per_row)+(3*(c))]
 
+/* .........................................................
+*/
 void copy_rgb_image(const ImageRGB * p_source,
-					ImageRGB * p_destinatin);
+					ImageRGB * p_destination);
 
 /* .........................................................
 typedef struct {
@@ -63,7 +67,11 @@ typedef struct {
 */
 class Image {
  public:
-  ImageRGB * the_image;
+  ImageRGB  the_image; /* it should be private,
+						* but we need to access it
+						* at "low level": from
+						* "only C" programs */
+  
   virtual void save_to_file(const char * file_name) const = 0;
   virtual ~Image() { }
 }; /* class */

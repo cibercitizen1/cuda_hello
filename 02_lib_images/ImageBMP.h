@@ -50,19 +50,17 @@ class ImageBMP : public Image
 
  public:
 
-  ImageRGB  the_image; /* it should be private,
-						* but we need to access it
-						* at "low level": from
-						* "only C" programs */
+  //ImageRGB  the_image; inherited from class Image 
 
   ImageBMP(const char * file_name) ;
 
-  ImageBMP(const unsigned int alto, 
-			const unsigned int ancho,
-			PixelRGB color = white_pixel);
+  ImageBMP(
+		   const unsigned int height_rows, 
+		   const unsigned int width_columns,
+		   PixelRGB color = white_pixel);
 
-  /* acceso a pixel dado f, c */
-  PixelRGB * pixel (const unsigned int f, const unsigned int c);
+  /* access a pixel by row, column */
+  PixelRGB * pixel (const unsigned int row, const unsigned int col);
 
   void save_to_file(const char * file_name) const;
 
@@ -74,10 +72,10 @@ class ImageBMP : public Image
 }; /* class */
 
 /* .........................................................
-*/
+ */
 void copy_adding_padding_3to4 (const unsigned char * p_source, 
-						unsigned char * p_destination,
-						unsigned int tamanyo);
+							   unsigned char * p_destination,
+							   unsigned int tamanyo);
 
 void copy_removing_padding_4to3(
 								const unsigned char * p_source, 
