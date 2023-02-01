@@ -58,7 +58,6 @@ __global__ void test_kernel_1( uchar4 * p_results,
 	p_results[ (width * y_row) + x_column ] = uc4;
   }
 
-
   /*
 
   p_results[ (width * y_row) + x_column ] = -input_val;

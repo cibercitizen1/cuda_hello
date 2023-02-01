@@ -1,8 +1,9 @@
 
 include ../makefile_h
 
-a.out: mainGeneral.cu
-	git pull
-	rm a.out || true
-	nvcc mainGeneral.cu	
-	./a.out
+compile: 
+	nvcc mainGeneral.cu	-o main.run
+	nvcc mainDescribeDevices.cu -o describe.run
+
+clean:
+	rm -f a.out *.run
