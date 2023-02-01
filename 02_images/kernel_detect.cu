@@ -1,3 +1,4 @@
+// -*- mode: c++ -*-
 // ===================================================================
 //
 // kernel
@@ -16,6 +17,12 @@ __global__ void kernel_detect( cuda4bytes * p_results, // -> results
 
   // read the pixel assigned to this thread
   PixelRGBA input_pixel = access_pixel( in_data_texture, x_column, y_row );
+
+  // read the eight neighbour pixels
+  PixelRGBA neighbour_pixels[8];
+
+  neighbour_pixels[0] = access_pixel( in_data_texture, x_column+1, y_row+1 );
+
   
   //
   // do some processing
@@ -27,7 +34,8 @@ __global__ void kernel_detect( cuda4bytes * p_results, // -> results
   //
   // copy the new value to results
   //
-  p_results[ (width * y_row) + x_column ] = my_rgba_to_cuda4bytes( input_pixel );
+  p_results[ (width * y_row) + x_column ] =
+  my_rgba_to_cuda4bytes( neighbour_pixels[0] );
 
   //
   // control test
