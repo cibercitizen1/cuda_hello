@@ -98,6 +98,17 @@ __device__ inline auto access_element( cudaTextureObject_t tex,
 									   unsigned int y_row ) {
   return tex2D<Type>( tex, x_column+0.5f, y_row+0.5f );
 } // ()
+
+
+__device__ inline auto access_pixel( cudaTextureObject_t tex,
+									 unsigned int x_column,
+									 unsigned int y_row ) {
+  uchar4 input_uchar4 = access_element( tex, x_column, y_row );
+  PixelRGBA input_pixel = my_uchar4_to_rgba( input_uchar4 );
+  return input_pixel;
+}
+
+
 	
 // ===================================================================
 //
@@ -115,11 +126,15 @@ __global__ void test_kernel_2( uchar4 * p_results,
   unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
 
   // read the pixel assigned to this thread
+  /*
   uchar4 input_uchar4 = access_element( in_data_texture, x_column, y_row );
   PixelRGBA input_pixel = my_uchar4_to_rgba( input_uchar4 );
+  */
+  PixelRGBA input_pixel = access_pixel( in_data_texture, x_column, y_row );
   
   // delete the blue value
-  input_pixel.b = 0;
+  input_pixel.r = 0;
+  input_pixel.b = 128;
   
   //
   uchar4 new_uchar4 = my_rgba_to_uchar4( input_pixel );
