@@ -19,15 +19,68 @@
 // ===================================================================
 // ===================================================================
 
-// The number of threads per block is influenced by how many
+// The maximum number of threads in a block is 1024 for some many
+// modern (2022) cuda devices. Hence, 32x32 is the max. dimensions
+// for a bloock
+
+// But that number of threads per block is influenced by how much
 // local memory a kernel uses. The more memory used, the lesser
 // number of threads a block can have.
 //
 // We define the block's number of threads in 2D for we will be
 // operate on 2D data.
 
-const unsigned int BLOCK_SIDE = 8;
+//const unsigned int BLOCK_SIDE = 8;
+const unsigned int BLOCK_SIDE = 32;
 dim3 THREADS_PER_BLOCK( BLOCK_SIDE, BLOCK_SIDE );
+
+// ===================================================================
+// ===================================================================
+//
+// A byte (i.e. 8 bits) is an unsigned char. We treat arrays of bytes
+// as a arrays of unsigned bytes at low level.
+//
+// Despite that, later, the elements of the array can be accessed 
+// in a more appropiate or convenient manner. For instance, if
+// if the data are pixels of a BMP image.
+//
+// A pixel of a BMP image has 3 bytes. When copied to host and device
+// memory, a 4th byte is added in order to have the accesses aligned
+// to a even number. This speeds up the accesses.
+//
+// We defined a PixelRGBA struct (see Image.h) supposedly having
+// 4 bytes, but it appears no to work well with cuda functions.
+//
+// A "4 bytes struct" is defined in cuda as uchar4.
+// As a consequence, we will be using uchar4.
+//
+// Addition predefined cuda functions
+//                                 blue, green red, alpha?
+// uchar4 new_pixel = make_uchar4( 200, 10, 20, 1 );
+//
+//
+// Let's define some helper functions for us.
+__device__ inline PixelRGBA my_uchar4_to_rgba( uchar4 src ) {
+  PixelRGBA dest;
+
+  dest.r = src.z;
+  dest.g = src.y;
+  dest.b = src.x;
+  dest.a = src.w;
+
+  return dest;
+} // ()
+
+__device__ inline uchar4 my_rgba_to_uchar4( PixelRGBA src ) {
+  uchar4 dest;
+  
+  dest.z = src.r;
+  dest.y = src.g;
+  dest.x = src.b;
+  dest.w = src.a;
+
+  return dest;
+} // ()
 
 // ===================================================================
 //
@@ -40,16 +93,22 @@ __global__ void test_kernel_1( uchar4 * p_results,
 							   cudaTextureObject_t in_data_texture
 							   ) {
 
+  // find out this thread's coordinates
   unsigned int x_column = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int y_row = (blockIdx.y * blockDim.y) + threadIdx.y;
 
-
-  //uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
+  // read the pixel assigned to this thread
   uchar4 input_pixel = tex2D<uchar4>( in_data_texture, x_column+0.5f, y_row+0.5f );
   
-  uchar4 new_pixel = make_uchar4( 200, 10, 20, 1 );
+  // make up a new pixel
+  PixelRGBA new_pixel { .b=200, .g=123, .r=123, .a=123 };
+  
+  //
+  uchar4 new_uchar4 = my_rgba_to_uchar4( new_pixel );
+  
+  //uchar4 new_uchar4 = make_uchar4( 200, 10, 20, 1 );
 	
-  p_results[ (width * y_row) + x_column ] = new_pixel;
+  p_results[ (width * y_row) + x_column ] = new_uchar4;
 
   if (x_column == y_row || x_column == width-1 ) {
 	uchar4 uc4;
@@ -58,10 +117,11 @@ __global__ void test_kernel_1( uchar4 * p_results,
 	p_results[ (width * y_row) + x_column ] = uc4;
   }
 
-  /*
 
-  p_results[ (width * y_row) + x_column ] = -input_val;
-  */
+
+
+
+
 	
 } // ()
 
