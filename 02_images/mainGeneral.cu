@@ -189,7 +189,6 @@ int main( int n_args, char * args[] ) {
 	 an_image.the_image.height,
 	 data_in_texture.texture
 	 );
-  
 
   // .................................................................
   // wait
